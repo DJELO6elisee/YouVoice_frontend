@@ -54,82 +54,117 @@
 
 <script setup>
 import { ref } from 'vue';
-import axios from 'axios';
+import axios from 'axios'; // Vous utilisez axios, c'est bien
 import { useRouter } from 'vue-router';
+// ===> IMPORTER LES DEUX TYPES DE HELPERS TOKEN <====
+import { setAuthToken, removeAuthToken } from '@/utils/auth'; // Pour token utilisateur normal
+import { setAdminAuthToken, removeAdminAuthToken } from '@/utils/adminAuth'; // Pour token admin
 
 const router = useRouter();
 
 const formData = ref({
   email: '',
   password: '',
-  rememberMe: false
+  rememberMe: false // Non utilisé actuellement, mais gardé
 });
 
 const isLoading = ref(false);
 const errorMessage = ref('');
-// const successMessage = ref(''); // On n'affiche plus de message de succès ici
 
-const API_BASE_URL = 'http://localhost:5000/api'; // Vérifiez cette URL
+// URL de base de l'API (votre configuration semble correcte)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'; // Utiliser VITE_... est mieux
 
 const handleLogin = async () => {
   errorMessage.value = '';
-  // successMessage.value = ''; // Pas besoin de reset
+  isLoading.value = true;
+  // Nettoyer les anciens tokens avant la tentative de connexion
+  removeAuthToken();
+  removeAdminAuthToken();
+  // Nettoyer aussi l'userId si vous le stockez séparément
+  localStorage.removeItem('userId');
 
   if (!formData.value.email || !formData.value.password) {
     errorMessage.value = 'Veuillez remplir tous les champs requis.';
+    isLoading.value = false; // Arrêter le chargement
     return;
   }
 
-  isLoading.value = true;
-
   try {
+    console.log(`[LoginView] Tentative de connexion pour ${formData.value.email}...`);
     const response = await axios.post(`${API_BASE_URL}/auth/login`, {
       email: formData.value.email,
       password: formData.value.password
     });
 
-    console.log('Login API Response:', response.data); // Log pour vérifier la structure
+    console.log('[LoginView] Réponse API reçue:', response.data);
 
-    // --- MODIFICATION IMPORTANTE ---
-    // Vérifier si la réponse contient bien le token
-    if (response.data && response.data.token) {
-      console.log('Token reçu:', response.data.token);
+    // --- LOGIQUE MODIFIÉE ---
+    // Vérifier si la réponse est un succès, contient un token ET un objet utilisateur
+    if (response.data && response.data.success === true && response.data.token && response.data.user) {
+      const token = response.data.token;
+      const user = response.data.user; // Récupérer l'objet utilisateur de la réponse
 
-      // 1. Stocker le token avec la clé attendue par la garde ('authToken')
-      localStorage.setItem('authToken', response.data.token);
-      console.log('authToken stocké dans localStorage.');
+      console.log('[LoginView] Connexion réussie. Token reçu. Vérification du statut Admin...');
+      console.log('[LoginView] Données utilisateur reçues:', user);
 
-      // (Optionnel) Stocker l'ID utilisateur si nécessaire pour d'autres parties de l'app
-      if (response.data.userId) { // Assurez-vous que l'API renvoie bien userId
-         localStorage.setItem('userId', response.data.userId);
-         console.log('userId stocké:', response.data.userId);
-      } else if (response.data.user && response.data.user.id) { // Ou si c'est dans un objet user
-         localStorage.setItem('userId', response.data.user.id);
-         console.log('userId (from user.id) stocké:', response.data.user.id);
+      // Stocker l'ID utilisateur (bonne pratique)
+       localStorage.setItem('userId', user.id);
+       console.log(`[LoginView] User ID stocké: ${user.id}`);
+
+      // Vérifier si l'utilisateur est un administrateur
+      // IMPORTANT: Assurez-vous que la propriété s'appelle bien 'isAdmin' (ou 'role') dans la réponse API
+      if (user.isAdmin === true) { // Vérification explicite de la valeur booléenne
+        console.log("[LoginView] Utilisateur identifié comme ADMIN.");
+        // Stocker le token comme token ADMIN
+        setAdminAuthToken(token);
+        // PAS stocker comme token USER normal (sauf si nécessaire pour votre logique)
+        // removeAuthToken(); // S'assurer qu'il n'y a pas de token user normal
+
+        // Rediriger vers le DASHBOARD ADMIN
+        console.log("[LoginView] Redirection vers AdminDashboard...");
+        // Utilisation de replace pour ne pas pouvoir revenir en arrière sur la page de login
+        await router.replace({ name: 'AdminDashboard' });
+
+      } else {
+        console.log("[LoginView] Utilisateur identifié comme USER normal.");
+        // Stocker le token comme token UTILISATEUR normal
+        setAuthToken(token);
+        // S'assurer qu'il n'y a pas de token admin
+        removeAdminAuthToken();
+
+        // Rediriger vers le DASHBOARD UTILISATEUR normal
+        console.log("[LoginView] Redirection vers Dashboard...");
+        await router.replace({ name: 'Dashboard' });
       }
 
-
-      // 2. Rediriger IMMÉDIATEMENT après avoir stocké le token (suppression du setTimeout)
-      // Utiliser 'await' est une bonne pratique ici car handleLogin est async
-      await router.push({ name: 'Dashboard' });
-      console.log('Redirection vers Dashboard demandée.');
-
     } else {
-      // Gérer le cas où l'API répond avec succès (status 2xx) mais sans token
-      console.error('Login successful but token missing in response:', response.data);
-      errorMessage.value = response.data.message || 'Token manquant dans la réponse du serveur.';
+      // Gérer le cas où l'API répond avec succès mais sans les données attendues
+      console.error('[LoginView] Réponse API invalide ou données manquantes:', response.data);
+      errorMessage.value = response.data?.message || 'Réponse de connexion inattendue du serveur.';
+      // Nettoyer les tokens par sécurité
+      removeAuthToken();
+      removeAdminAuthToken();
+      localStorage.removeItem('userId');
     }
-    // --- FIN MODIFICATION ---
+    // --- FIN LOGIQUE MODIFIÉE ---
 
   } catch (error) {
-    console.error('Login error:', error.response || error);
+    console.error('[LoginView] Erreur lors de la connexion:', error.response?.data || error.message || error);
+    // Afficher le message d'erreur renvoyé par l'API si disponible
     if (error.response && error.response.data && error.response.data.message) {
       errorMessage.value = error.response.data.message;
-    } else {
-      errorMessage.value = 'Email ou mot de passe incorrect.'; // Message plus direct
+    } else if (error.message.includes('Network Error')) {
+         errorMessage.value = 'Erreur réseau. Impossible de contacter le serveur.';
     }
+    else {
+      errorMessage.value = 'Identifiants invalides ou erreur serveur.'; // Message plus générique
+    }
+     // Nettoyer les tokens par sécurité en cas d'erreur
+    removeAuthToken();
+    removeAdminAuthToken();
+    localStorage.removeItem('userId');
   } finally {
-    isLoading.value = false; // S'assurer que le bouton est réactivé même en cas d'erreur
+    isLoading.value = false;
   }
 };
 </script>

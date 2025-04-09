@@ -73,7 +73,9 @@
           </div>
       </div>
       <!-- FIN NOUVEAU Groupe -->
-
+      <div v-if="reportError" class="error-message report-error"> <!-- Nouvelle classe CSS si besoin -->
+        <i class="fa-solid fa-circle-exclamation"></i> {{ reportError }}
+      </div>
     </div>
     <!-- FIN Actions -->
 
@@ -499,8 +501,79 @@ const submitComment = async () => {
 
 // --- Signalement (Placeholder) --- (Existant)
 const reportNote = async () => {
-    if(window.confirm("Signaler cette note ? (Fonctionnalité non implémentée côté serveur)")) {
-        console.log(`Reporting note ${props.note.id}`);
+    // Ne pas permettre plusieurs signalements simultanés
+    if (isProcessingAction.value) return;
+
+    // Demander confirmation à l'utilisateur
+    const reason = prompt("Veuillez indiquer la raison de votre signalement (minimum 5 caractères) :");
+
+    // Vérifier si l'utilisateur a annulé ou n'a pas fourni de raison suffisante
+    if (reason === null) { // L'utilisateur a cliqué sur "Annuler"
+        console.log("[ReportNote] Signalement annulé par l'utilisateur.");
+        return;
+    }
+    if (reason.trim().length < 5) {
+        reportError.value = "La raison fournie est trop courte (minimum 5 caractères).";
+        // Afficher l'erreur à l'utilisateur (via v-if="reportError" dans le template)
+        // Vous pouvez utiliser une alerte ou un message plus intégré
+         alert("La raison fournie est trop courte (minimum 5 caractères).");
+        return;
+    }
+
+    // Récupérer le token d'authentification
+    const token = getAuthToken(); // Utilise votre helper existant
+    if (!token) {
+        reportError.value = "Vous devez être connecté pour signaler une note.";
+         alert("Vous devez être connecté pour signaler une note."); // Ou rediriger vers login
+        return;
+    }
+
+    // Début du traitement API
+    isProcessingAction.value = true;
+    reportError.value = ''; // Réinitialiser l'erreur précédente
+
+    // Endpoint API pour créer un signalement
+    // Adaptez '/api/reports' si votre route est différente (ex: '/api/auth/reports')
+    const apiUrl = `${props.backendUrl}/api/reports`;
+
+    console.log(`[ReportNote] Envoi du signalement pour la note ${props.note.id} vers ${apiUrl}`);
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json' // Bonne pratique
+            },
+            body: JSON.stringify({
+                voiceNoteId: props.note.id, // ID de la note signalée
+                reason: reason.trim()       // Raison fournie par l'utilisateur
+            })
+        });
+
+        const responseData = await response.json(); // Tenter de lire la réponse JSON
+
+        if (!response.ok) {
+            // Utiliser le message d'erreur de l'API s'il existe
+            throw new Error(responseData.message || `Erreur ${response.status} lors du signalement.`);
+        }
+
+        // Succès !
+        console.log("[ReportNote] Signalement réussi:", responseData);
+        alert("Votre signalement a bien été enregistré. Merci."); // Message de succès
+
+        // Optionnel: Mettre à jour l'UI pour indiquer que la note a été signalée par cet utilisateur ?
+        // emit('note-reported', props.note.id);
+
+    } catch (error) {
+        console.error("[ReportNote] Échec du signalement:", error);
+        reportError.value = error.message || "Une erreur est survenue lors de l'envoi du signalement.";
+        // Afficher l'erreur à l'utilisateur
+         alert(`Erreur: ${reportError.value}`);
+
+    } finally {
+        isProcessingAction.value = false; // Réactiver les boutons
     }
 };
 
@@ -865,6 +938,13 @@ const logShareToBackend = async (platform) => {
     transition: background-color 0.2s ease;
     line-height: 1;
 }
+
+/* Dans <style scoped> de NoteCard.vue */
+.report-error {
+  background-color: rgba(255, 193, 7, 0.7); /* Exemple: Orange/Ambre translucide */
+  color: #fff; /* Ou une couleur de texte qui contraste bien */
+}
+
 
 .share-button {
     color: black;
