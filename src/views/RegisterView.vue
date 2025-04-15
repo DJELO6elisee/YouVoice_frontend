@@ -82,7 +82,7 @@
   const errorMessage = ref('');
   const successMessage = ref('');
   
-  const API_BASE_URL = 'http://localhost:5000/api'; // <-- IMPORTANT: Vérifiez cette URL
+  const API_BASE_URL = 'https://youvoiceapi-production.up.railway.app/api'; // <-- IMPORTANT: Vérifiez cette URL
   
   const handleRegister = async () => {
     errorMessage.value = '';

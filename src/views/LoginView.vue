@@ -72,7 +72,7 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 
 // URL de base de l'API (votre configuration semble correcte)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'; // Utiliser VITE_... est mieux
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app/api'; // Utiliser VITE_... est mieux
 
 const handleLogin = async () => {
   errorMessage.value = '';

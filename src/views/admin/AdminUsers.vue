@@ -25,7 +25,6 @@
   
        <!-- Zone pour la Pagination (à remplir) -->
        <div class="pagination-section">
-          <p class="pagination-placeholder">Pagination - À implémenter</p>
           <!-- Composant ou logique de pagination ici -->
        </div>
   
@@ -52,7 +51,7 @@
   
   // --- URLs API ---
   // Adapter selon le montage dans server.js
-  const apiAdminBaseUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/auth/admin`;
+  const apiAdminBaseUrl = `${import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app/api'}/auth/admin`;
   // OU si monté sous /api/admin:
   // const apiAdminBaseUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/admin`;
   

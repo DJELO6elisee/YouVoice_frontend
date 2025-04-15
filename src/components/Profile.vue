@@ -4,7 +4,6 @@
       <div v-if="isLoading" class="loading-indicator">Chargement du profil...</div>
 
       <!-- Affichage de l'erreur -->
-      <!-- MODIFICATION: Condition pour ne pas afficher l'erreur si chargement -->
       <div v-if="!isLoading && error" class="error-message">{{ error }}</div>
 
       <!-- Contenu du profil (affiché seulement si pas d'erreur et chargement terminé) -->
@@ -61,8 +60,9 @@
                           <i :class="['fa-solid', getIconClass(note.id)]"></i>
                       </button>
                       <div class="waveform-placeholder">
-                          <div v-for="i in 170" :key="`note-${note.id}-bar-${i}`" :style="{ height: `${Math.random() * 80 + 10}%` }" class="bar"></div>
-                      </div>
+                        <div v-for="i in 90" :key="`note-${note.id}-bar-${i}`" :style="{ height: `${Math.random() * 80 + 10}%` }" class="bar"></div> <!-- Moins de barres pour perf/visuel mobile -->
+                    </div>
+
                       <!-- AJOUT: Conteneur pour durée et date -->
                       <div class="note-meta">
                            <span class="duration">{{ formatDuration(note.duration) }}</span>
@@ -103,9 +103,9 @@ const voiceNotes = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
 // MODIFICATION: Vérifie que le port 5000 est correct pour ton API
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app/api';
 // MODIFICATION: Ajout de apiUrlBase (URL racine de ton serveur pour les fichiers statiques)
-const apiUrlBase = import.meta.env.VITE_API_URL_BASE || 'http://localhost:5000';
+const apiUrlBase = import.meta.env.VITE_API_URL_BASE || 'https://youvoiceapi-production.up.railway.app';
 
 // --- État Audio ---
 const currentAudio = ref(null);
@@ -348,7 +348,8 @@ onUnmounted(() => {
   font-family: sans-serif;
   color: #333;
   min-height: 100vh;
-  padding-top: 20px;
+  padding: 20px 15px; /* Padding réduit pour mobile par défaut */
+  box-sizing: border-box; /* Inclure padding dans la largeur */
 }
 
 /* Indicateur de chargement et message d'erreur */
@@ -372,14 +373,14 @@ onUnmounted(() => {
 
 /* Section Profil */
 .profile-main {
-  padding: 0 30px 30px 30px;
+  padding: 0 0 20px 0; /* Padding bas réduit */
   position: relative;
   text-align: center;
 }
 
 .profile-banner {
   background-color: #f5a623;
-  height: 150px;
+  height: 120px; /* Hauteur réduite */
   border-radius: 8px;
   position: relative;
 }
@@ -392,12 +393,12 @@ onUnmounted(() => {
   color: white;
   padding: 3px 8px;
   border-radius: 4px;
-  font-size: 0.7em;
+  font-size: 0.65em;
   font-weight: bold;
 }
 
 .profile-details {
-  margin-top: -70px;
+  margin-top: -60px;
   position: relative;
   z-index: 1;
   display: flex;
@@ -408,11 +409,13 @@ onUnmounted(() => {
 .profile-picture-container {
     position: relative;
     display: inline-block;
+    margin-bottom: 10px;
+
 }
 
 .profile-picture {
-  width: 180px;
-  height: 180px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   border: 4px solid #f0f0f7;
   object-fit: cover;
@@ -423,8 +426,8 @@ onUnmounted(() => {
 
 .edit-profile-button {
   position: absolute;
-  bottom: 5px;
-  right: -15px;
+  bottom: 0px;
+  right: -5px;
   background-color: #ff9933;
   color: white;
   border: none;
@@ -538,35 +541,37 @@ onUnmounted(() => {
 
 /* Historique des publications */
 .publication-history {
-  padding: 0 30px 30px 30px;
+  padding: 0 0 20px 0;
 }
 
 .history-title {
   text-align: center;
-  font-size: 1.2em;
+  font-size: 1.1em;
   font-weight: bold;
   color: #444;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
 }
 
 .history-items {
-  display: grid;
-  grid-template-columns: 1fr; /* Force 2 colonnes */
-  gap: 20px;
-  max-width: 1000px; /* Limite la largeur totale de la grille (ajuste si besoin) */
-  margin-left: auto; /* Centre la grille */
-  margin-right: auto; /* Centre la grille */
+  display: flex;
+  flex-direction: column; /* Empiler verticalement par défaut */
+  gap: 15px;
+  max-width: 100%; /* Limite la largeur totale de la grille (ajuste si besoin) */
+  margin: 0;
+
 }
 
 .history-item {
   background-color: #fff;
-  border-radius: 15px;
-  padding: 15px 20px;
+  border-radius: 10px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   gap: 10px; /* AJOUT: Espace entre éléments ajusté */
   transition: background-color 0.3s, box-shadow 0.3s; /* Animation douce */
   border: 1px solid #ccc; /* Bordure initiale transparente */
+  flex-wrap: nowrap; /* Empêche le retour à la ligne des sections internes */
+
 }
 
 /* Style pour l'élément en cours de lecture */
@@ -606,15 +611,15 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-end; /* Aligner les barres en bas */
   overflow: hidden;
-  padding: 5px; /* Espace intérieur */
-  gap: 2px; /* Espace entre les barres */
+  padding: 7px; /* Espace intérieur */
+  gap: 10px; /* Espace entre les barres */
   margin: 0 5px; /* AJOUT: Marge réduite pour laisser place à date/delete */
 }
 
 .bar {
   display: inline-block;
   width: 3px; /* Barres légèrement plus épaisses */
-  background-color: #a5b4fc; /* Bleu indigo clair */
+  background-color: #99aafd; /* Bleu indigo clair */
   flex-shrink: 0;
   border-radius: 1px; /* Coins arrondis légers */
   transition: background-color 0.3s; /* Animation couleur */
@@ -630,7 +635,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    min-width: 60px;
+    min-width: 55px;
     text-align: right;
     gap: 2px;
     flex-shrink: 0;
@@ -677,6 +682,46 @@ onUnmounted(() => {
 }
 .delete-button:active {
     transform: scale(0.9);
+}
+
+@media (min-width: 768px) {
+    .user-profile-page {
+        padding: 30px; /* Rétablir padding */
+    }
+    .profile-banner { height: 150px; } /* Rétablir hauteur */
+    .profile-details { margin-top: -70px; } /* Rétablir marge */
+    .profile-picture { width: 150px; height: 150px; } /* Taille intermédiaire */
+    .edit-profile-button { width: 40px; height: 40px; font-size: 1.2em; bottom: 5px; right: 0px;}
+    .user-name { font-size: 1.8em; } /* Taille intermédiaire */
+    .user-bio { font-size: 0.95em; max-width: 450px; }
+    .audio-recorder { max-width: 350px; padding: 25px; } /* Rétablir taille */
+    .mic-button { width: 60px; height: 60px; font-size: 1.8em; }
+    .timestamp { font-size: 0.9em; }
+    .control-button { width: 45px; height: 45px; font-size: 1.2em; }
+    .control-button.send-button { width: 55px; height: 55px; font-size: 1.5em; }
+    .section-divider { margin: 30px 0; }
+    .publication-history { padding: 0 15px 30px 15px; } /* Ajouter padding latéral */
+    .history-title { font-size: 1.2em; margin-bottom: 25px; }
+
+    /* Passer l'historique en grille de 2 colonnes */
+    .history-items {
+        display: flex;
+        flex-direction: column; /* Empiler verticalement par défaut */
+        gap: 15px;
+        max-width: 100%; /* Limite la largeur totale de la grille (ajuste si besoin) */
+        margin: 0;
+
+    }
+    .history-item {
+        padding: 12px 15px; /* Padding intermédiaire */
+        /* Le flex interne reste le même */
+    }
+    .waveform-placeholder { height: 40px; } /* Rétablir hauteur */
+    .note-meta { min-width: 60px; }
+    .duration { font-size: 0.85em; }
+    .publication-date { font-size: 0.75em; }
+    .speaker-icon { font-size: 1.1em; }
+    .delete-button { font-size: 1.1em; }
 }
 
 

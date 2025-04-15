@@ -67,7 +67,7 @@
       if (!avatarPath) return placeholder;
       if (avatarPath.startsWith('http')) return avatarPath;
       // Assumer que apiUrlBase est disponible globalement ou via import/prop
-      const apiUrlBase = import.meta.env.VITE_API_URL_BASE || 'http://localhost:5000';
+      const apiUrlBase = import.meta.env.VITE_API_URL_BASE || 'https://youvoiceapi-production.up.railway.app';
       try { return new URL(avatarPath, apiUrlBase).href; } catch (e) { return placeholder; }
   };
   

@@ -126,8 +126,8 @@ const isLoading = ref(true);
 const error = ref(null);
 
 // --- AJOUT: Récupérer les URLs de base de l'environnement ---
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-const apiUrlBase = import.meta.env.VITE_API_URL_BASE || 'http://localhost:5000';
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app/api';
+const apiUrlBase = import.meta.env.VITE_API_URL_BASE || 'https://youvoiceapi-production.up.railway.app';
 
 // --- MODIFICATION: Utiliser editableData comme source principale pour le formulaire ---
 // Initialiser avec des valeurs null ou vides

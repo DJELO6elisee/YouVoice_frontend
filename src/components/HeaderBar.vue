@@ -8,7 +8,12 @@
     <div class="navbar-right">
       <div class="search-bar">
         <i class="fa-solid fa-magnifying-glass search-icon"></i>
-        <input type="search" placeholder="Search" @input="handleSearch" />
+        <input
+           type="search"
+           placeholder="Chercher par @nom ou description..."
+           :value="currentSearchTerm"
+           @input="handleSearch"
+        />
       </div>
       <button class="icon-button notifications" aria-label="Notifications">
         <i class="fa-regular fa-bell"></i>
@@ -30,10 +35,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'; // Ajout de onMounted
+import { ref, computed, onMounted, defineEmits  } from 'vue'; // Ajout de onMounted
+const emit = defineEmits(['search']); // Déclare que ce composant peut émettre un événement 'search'
 
-// Supprimer defineProps si userName et userAvatarUrl ne sont plus passés en props
-// const props = defineProps({ ... });
 
 // --- NOUVEAU: State local pour les infos utilisateur ---
 const userName = ref('');
@@ -42,8 +46,8 @@ const isLoading = ref(true); // État de chargement
 const error = ref('');      // État d'erreur
 
 // --- URLs API ---
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-const apiUrlBase = import.meta.env.VITE_API_URL_BASE || 'http://localhost:5000'; // Pour les fichiers statiques
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app/api';
+const apiUrlBase = import.meta.env.VITE_API_URL_BASE || 'https://youvoiceapi-production.up.railway.app'; // Pour les fichiers statiques
 
 // --- NOUVEAU: Propriété calculée pour l'URL complète de l'avatar ---
 const userAvatarUrl = computed(() => {
@@ -127,9 +131,12 @@ onMounted(() => {
 
 
 // --- Fonctions existantes ---
-const currentDate = computed(() => { /* ... (inchangé) ... */ });
-const handleSearch = (event) => { /* ... (inchangé) ... */ };
+// const currentDate = computed(() => { /* ... (inchangé) ... */ });
 
+const handleSearch = (event) => {
+  // Émettre la valeur actuelle de l'input vers le composant parent
+  emit('search', event.target.value);
+};
 </script>
 
 <style scoped>
@@ -243,5 +250,50 @@ const handleSearch = (event) => { /* ... (inchangé) ... */ };
     justify-content: center;
     align-items: center;
     font-weight: bold;
+}
+
+/* --- Styles pour Écrans Moyens et Larges (ex: 768px+) --- */
+@media (max-width: 768px) { /* md: breakpoint */
+  .app-navbar {
+    padding: 15px 30px; /* Padding original */
+  }
+
+  .navbar-left h1 {
+    font-size: 1.2em; /* Taille originale */
+    margin-left: 8px;
+
+  }
+
+  .navbar-right {
+    gap: 15px; /* Espace original */
+        margin-left: 15px;
+
+  }
+
+  /* Afficher la barre de recherche */
+  .search-bar {
+    display: block; /* AFFICHER */
+
+  }
+   .search-bar input {
+       min-width: 180px; /* Largeur originale */
+       font-size: 1em; /* Taille texte originale */
+   }
+
+
+  /* Augmenter taille boutons icônes */
+  .icon-button {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #d1d5db; /* Remettre bordure */
+  }
+   .icon-button i {
+       font-size: 1.1em; /* Taille icône originale */
+   }
+
+   .notification-badge {
+       top: -3px; right: -3px; width: 16px; height: 16px; font-size: 0.7em; /* Taille originale */
+   }
+
 }
 </style>

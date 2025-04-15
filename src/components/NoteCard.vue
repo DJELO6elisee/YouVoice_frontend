@@ -4,20 +4,52 @@
       <img :src="creatorAvatarUrl" alt="User Avatar" class="avatar" />
       <div class="info">
         <span class="name">{{ note.user?.username || 'Utilisateur inconnu' }}</span>
-        <span class="timestamp">{{ relativeTimestamp }}</span>
+        <span class="timestamp">Publié il y a : {{ relativeTimestamp }}</span>
       </div>
     </div>
 
-    <div class="audio-player">
-      <button class="play-button" @click="togglePlayPause" :disabled="!audioSourceUrl || !!audioError">
-        <i :class="['fa-solid', isPlaying ? 'fa-pause' : 'fa-play']"></i>
-      </button>
-      <div class="waveform">
-        <!-- Waveform Statique -->
-        <div v-for="i in 170" :key="i" :style="{ height: `${Math.random() * 80 + 10}%` }" class="bar"></div>
-      </div>
-      <span class="duration">{{ formattedDuration }}</span>
-      <button class="volume-button" title="Volume"><i class="fa-solid fa-volume-high"></i></button>
+    <div class="audio-player-container">
+        <!-- Affichage Erreur Audio -->
+        <div v-if="audioError" class="audio-error-message">
+            <i class="fa-solid fa-circle-exclamation"></i> {{ audioError }}
+        </div>
+
+        <div class="audio-player">
+            <button
+                class="play-button"
+                @click="togglePlayPause"
+                :disabled="!audioSourceUrl || !!audioError"
+                :title="isPlaying ? 'Pause' : 'Lecture'"
+            >
+                <i :class="['fa-solid', isPlaying ? 'fa-pause' : 'fa-play']"></i>
+            </button>
+
+            <!-- === Waveform/Progress Bar Interactive === -->
+            <div
+                class="waveform-container"
+                ref="waveformContainerRef"
+                @click="handleSeek"
+                @mousedown="handleDragStart" 
+                @touchstart.prevent="handleDragStart"
+                title="Cliquer ou glisser pour avancer/reculer"
+            >
+                <!-- Fond statique (visuel) -->
+                <div class="waveform-background">
+                     <div v-for="i in 90" :key="`bg-bar-${i}`" :style="{ height: `${Math.random() * 70 + 5}%` }" class="bar"></div> <!-- Clé unique -->
+                </div>
+                <!-- Barre de progression dynamique -->
+                <div class="progress-bar" :style="{ width: progressPercentage + '%' }"></div> <!-- Liée au computed % -->
+            </div>
+            <!-- ======================================== -->
+
+            <!-- Affichage du temps dynamique -->
+            <span class="duration">{{ formattedTime }}</span> <!-- Lié au computed temps formaté -->
+
+            <!-- Bouton Volume (Fonctionnalité à ajouter si besoin) -->
+            <button class="volume-button" title="Volume (Non implémenté)">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Affichage Erreur Audio -->
@@ -30,7 +62,6 @@
      </div>
 
     <!-- Actions : Réactions et Signalement -->
-        <!-- Actions : Réactions, Signalement et Partage -->
         <div class="card-actions">
       <!-- Groupe de gauche : Réactions -->
       <div class="reaction-buttons">
@@ -89,7 +120,6 @@
         @keyup.enter="submitComment"
         :disabled="isProcessingAction"
       />
-      <button class="mic-button" title="Commentaire vocal (non impl.)"><i class="fa-solid fa-microphone"></i></button>
       <button
         class="send-comment-button"
         @click="submitComment"
@@ -171,12 +201,12 @@
 
 
     <audio ref="audioElement" preload="metadata"></audio>
-
+    
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, onBeforeUnmount, watch, nextTick, defineProps, defineEmits } from 'vue'; // Ajout de defineEmits si ce n'est pas déjà fait
 
 // --- Props ---
 const props = defineProps({
@@ -194,13 +224,13 @@ const props = defineProps({
     })
   },
   currentUserId: { type: [String, Number], required: true },
-  backendUrl: { type: String, required: true, default: 'http://localhost:5000' }
+  backendUrl: { type: String, required: true, default: 'https://youvoiceapi-production.up.railway.app' }
 });
 
 // ====> AJOUT : État pour la visibilité du Popover (placé ici car utilisé globalement)
 const isCommentsPopoverVisible = ref(false);
 
-const emit = defineEmits(['error', 'comment-added', 'reaction-toggled', 'note-reported', 'update:note']);
+const emit = defineEmits(['error', 'comment-added', 'reaction-toggled', 'note-reported', 'update:note', 'delete:note']);
 
 // --- Reactive State --- (Existants)
 const isPlaying = ref(false);
@@ -211,6 +241,12 @@ const reactionError = ref('');
 const newCommentText = ref('');
 const isProcessingAction = ref(false);
 const audioElement = ref(null);
+const totalDuration = ref(0);          // Durée totale réelle de l'audio (secondes)
+const isLoadingMetadata = ref(true);   // Chargement des métadonnées (durée) en cours ?
+const waveformContainerRef = ref(null); // NOUVEAU: Référence au conteneur de la waveform
+const isDraggingProgress = ref(false); // NOUVEAU: Indicateur de drag de la barre
+
+
 
 // --- Computed Properties --- (Existants)
 
@@ -240,12 +276,31 @@ const creatorAvatarUrl = computed(() => {
         return placeholderUrl;
     }
 });
-const formattedDuration = computed(() => {
-    const totalSeconds = Math.round(props.note.duration || 0);
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    return `${String(mins)}:${String(secs).padStart(2, '0')}`;
+
+
+
+const formattedTime = computed(() => {
+    const format = (seconds) => {
+        const totalSecs = Math.round(seconds);
+        if (isNaN(totalSecs) || totalSecs < 0) return '0:00';
+        const mins = Math.floor(totalSecs / 60);
+        const secs = totalSecs % 60;
+        return `${String(mins)}:${String(secs).padStart(2, '0')}`;
+    };
+    // Utilise la durée réelle si chargée (>0), sinon la durée initiale de la prop
+    const duration = totalDuration.value > 0 ? totalDuration.value : props.note.duration;
+    return `${format(currentTime.value)} / ${format(duration)}`;
 });
+
+const progressPercentage = computed(() => {
+    const duration = totalDuration.value > 0 ? totalDuration.value : props.note.duration;
+    if (duration > 0 && currentTime.value >= 0) {
+        return Math.min((currentTime.value / duration) * 100, 100); // Clamp 0-100
+    }
+    return 0;
+});
+
+
 const relativeTimestamp = computed(() => {
     if (!props.note.createdAt) return '';
     try {
@@ -304,7 +359,36 @@ const getAuthToken = () => {
     return token;
 };
 
-// --- Methods --- (Existants)
+const handleLoadedMetadata = () => {
+    if (!audioElement.value) return;
+    const duration = audioElement.value.duration;
+    if (isFinite(duration)) {
+        totalDuration.value = duration; // Stocke la durée réelle
+        isLoadingMetadata.value = false;
+        console.log(`[Meta Loaded ${props.note.id}] Duration: ${totalDuration.value.toFixed(2)}s`);
+        // Nettoyer certaines erreurs si la durée charge enfin
+        if (audioError.value.includes("Format") || audioError.value.includes("réseau")) {
+            audioError.value = '';
+        }
+    } else {
+        console.warn(`[Meta Loaded ${props.note.id}] Invalid duration: ${duration}`);
+        isLoadingMetadata.value = false;
+        // Utiliser props.note.duration comme fallback si elle existe
+        if (props.note.duration > 0) {
+             totalDuration.value = props.note.duration;
+        } else if (!audioError.value) { // Ne pas écraser une erreur existante
+            audioError.value = "Durée audio invalide.";
+        }
+    }
+};
+
+const handleTimeUpdate = () => {
+    // Mettre à jour currentTime SEULEMENT si on ne drague PAS
+    if (audioElement.value && !isNaN(audioElement.value.currentTime) && !isDraggingProgress.value) {
+        currentTime.value = audioElement.value.currentTime;
+    }
+};
+
 
 // -- Audio Handlers --
 const handlePlay = () => {
@@ -352,11 +436,7 @@ const togglePlayPause = () => {
     }
   }
 };
-const handleTimeUpdate = () => {
-    if (audioElement.value && !isNaN(audioElement.value.currentTime)) {
-        currentTime.value = audioElement.value.currentTime;
-    }
-};
+
 const handleAudioEnded = () => {
     console.log(`[Audio Ended ${props.note.id}] Audio finished.`);
     isPlaying.value = false;
@@ -378,6 +458,82 @@ const handleAudioElementError = (e) => {
         audioError.value = 'Erreur audio inconnue.';
     }
     isPlaying.value = false;
+};
+
+const handleAudioStalled = () => { console.warn(`[Event Stalled ${props.note.id}]`); };
+const handleAudioWaiting = () => { console.log(`[Event Waiting ${props.note.id}] Buffering...`); };
+const handleCanPlay = () => { console.log(`[Event CanPlay ${props.note.id}] Ready.`); };
+
+const calculateSeekTime = (event) => {
+    const duration = totalDuration.value > 0 ? totalDuration.value : props.note.duration;
+    if (!waveformContainerRef.value || duration <= 0) return null;
+    try {
+        const rect = waveformContainerRef.value.getBoundingClientRect();
+        const clientX = event.type.startsWith('touch') ? event.touches[0].clientX : event.clientX;
+        const relativeX = clientX - rect.left;
+        const containerWidth = waveformContainerRef.value.offsetWidth;
+        if (containerWidth <= 0) return null;
+        let progress = Math.max(0, Math.min(1, relativeX / containerWidth));
+        return progress * duration;
+    } catch { return null; } // Ignorer les erreurs pendant le calcul (ex: touch event sans touches)
+};
+
+const handleSeek = (event) => {
+    if (isDraggingProgress.value) return;
+    const seekTime = calculateSeekTime(event);
+    if (seekTime !== null && audioElement.value && isFinite(seekTime)) {
+        console.log(`[Seek Click ${props.note.id}] To ${seekTime.toFixed(2)}s`);
+        audioElement.value.currentTime = seekTime;
+        currentTime.value = seekTime; // Update visuel direct
+    }
+};
+
+const handleDragStart = (event) => {
+    const duration = totalDuration.value > 0 ? totalDuration.value : props.note.duration;
+    if (duration <= 0 || !waveformContainerRef.value) return;
+    isDraggingProgress.value = true;
+    document.body.style.userSelect = 'none'; // Empêche sélection texte
+    waveformContainerRef.value?.classList.add('dragging');
+
+    const seekTime = calculateSeekTime(event);
+    if (seekTime !== null && isFinite(seekTime)) {
+        currentTime.value = seekTime; // Update visuel direct
+    }
+     // Empêcher le scroll sur mobile pendant le drag de la barre
+     if (event.type.startsWith('touch')) {
+        event.preventDefault();
+     }
+};
+
+const handleDragging = (event) => {
+    if (!isDraggingProgress.value) return;
+    const seekTime = calculateSeekTime(event);
+    if (seekTime !== null && isFinite(seekTime)) {
+        currentTime.value = seekTime; // Update visuel en temps réel
+        // Mise à jour audio en temps réel (optionnel, peut être fait à la fin)
+        if (audioElement.value) {
+            audioElement.value.currentTime = seekTime;
+        }
+    }
+     // Empêcher le scroll sur mobile pendant le drag de la barre
+    if (event.type.startsWith('touch')) {
+       event.preventDefault();
+    }
+};
+
+const handleDragEnd = (event) => {
+    if (!isDraggingProgress.value) return;
+    isDraggingProgress.value = false;
+    document.body.style.userSelect = '';
+    waveformContainerRef.value?.classList.remove('dragging');
+
+    // La dernière valeur de currentTime devrait être correcte grâce à handleDragging
+    // Si on ne mettait pas à jour l'audio pendant le drag, on le ferait ici :
+    // const finalSeekTime = currentTime.value;
+    // if (audioElement.value && isFinite(finalSeekTime)) {
+    //     audioElement.value.currentTime = finalSeekTime;
+    // }
+    console.log(`[Drag End ${props.note.id}] Final time approx ${currentTime.value.toFixed(2)}s`);
 };
 
 // -- Options (Placeholder) --
@@ -588,6 +744,34 @@ const closeCommentsPopover = () => {
     isCommentsPopoverVisible.value = false;
 };
 
+const cleanupAudioListeners = () => {
+    if (!audioElement.value) return;
+    audioElement.value.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    audioElement.value.removeEventListener('timeupdate', handleTimeUpdate);
+    audioElement.value.removeEventListener('play', handlePlay);
+    audioElement.value.removeEventListener('pause', handlePause);
+    audioElement.value.removeEventListener('ended', handleAudioEnded);
+    audioElement.value.removeEventListener('error', handleAudioElementError);
+    audioElement.value.removeEventListener('stalled', handleAudioStalled);
+    audioElement.value.removeEventListener('waiting', handleAudioWaiting);
+    audioElement.value.removeEventListener('canplay', handleCanPlay);
+};
+
+const setupAudioListeners = () => {
+    if (!audioElement.value) return;
+    cleanupAudioListeners(); // Assurer qu'il n'y a pas de doublons
+    audioElement.value.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audioElement.value.addEventListener('timeupdate', handleTimeUpdate);
+    audioElement.value.addEventListener('play', handlePlay);
+    audioElement.value.addEventListener('pause', handlePause);
+    audioElement.value.addEventListener('ended', handleAudioEnded);
+    audioElement.value.addEventListener('error', handleAudioElementError);
+    audioElement.value.addEventListener('stalled', handleAudioStalled);
+    audioElement.value.addEventListener('waiting', handleAudioWaiting);
+    audioElement.value.addEventListener('canplay', handleCanPlay);
+};
+
+
 // --- Lifecycle Hooks & Watchers --- (Existants)
 const initializeAudio = () => {
      audioError.value = ''; isPlaying.value = false; currentTime.value = 0;
@@ -602,11 +786,34 @@ const initializeAudio = () => {
 };
 
 onMounted(() => {
-    nextTick(() => {
-        if (audioElement.value) { console.log(`[Mounted ${props.note.id}] Audio element found. Initializing.`); initializeAudio(); }
-        else { console.error(`[Mounted ${props.note.id}] Audio element ref is NULL!`); }
-    });
+    // La création de l'élément Audio se fera dans initializeAudio
+    // ou lors du watch de audioSourceUrl
+    // On ajoute les listeners globaux pour le drag
+    window.addEventListener('mousemove', handleDragging);
+    window.addEventListener('touchmove', handleDragging, { passive: false });
+    window.addEventListener('mouseup', handleDragEnd);
+    window.addEventListener('touchend', handleDragEnd);
+    // Appel initial pour configurer l'audio si l'URL est déjà dispo
+    initializeAudio();
 });
+
+onBeforeUnmount(() => { // Utiliser onBeforeUnmount
+  console.log(`[BeforeUnmount ${props.note.id}] Cleaning up.`);
+  // Nettoyer l'élément audio et ses listeners
+  if (audioElement.value) {
+    cleanupAudioListeners();
+    audioElement.value.pause();
+    audioElement.value.removeAttribute('src');
+    audioElement.value.load(); // Annuler chargement réseau
+    audioElement.value = null;
+  }
+  // Nettoyer les listeners globaux
+  window.removeEventListener('mousemove', handleDragging);
+  window.removeEventListener('touchmove', handleDragging);
+  window.removeEventListener('mouseup', handleDragEnd);
+  window.removeEventListener('touchend', handleDragEnd);
+});
+
 
 onUnmounted(() => {
   console.log(`[Unmounted ${props.note.id}] Cleaning up.`);
@@ -617,12 +824,26 @@ onUnmounted(() => {
   }
 });
 
-watch(() => audioSourceUrl.value, (newUrl, oldUrl) => { if (newUrl !== oldUrl) { console.log(`[Watch URL ${props.note.id}] URL changed. Re-initializing.`); initializeAudio(); } });
-watch(() => props.note, (newNote, oldNote) => {
-    console.log(`[Watch Note ${props.note.id}] Note prop changed.`);
-    if (newNote?.id !== oldNote?.id) { commentError.value = ''; reactionError.value = ''; }
-}, { deep: true });
+watch(audioSourceUrl, (newUrl, oldUrl) => {
+    // Initialiser seulement si l'URL change réellement
+    if (newUrl !== oldUrl) {
+        console.log(`[Watch URL ${props.note.id}] URL changed. Re-initializing audio.`);
+        initializeAudio();
+    }
+});
 
+// Surveiller les changements de la note (ID, etc.)
+watch(() => props.note.id, (newId, oldId) => {
+    // Si l'ID change, c'est une nouvelle note, on réinitialise tout (déjà géré par le watch URL normalement)
+    if (newId !== oldId) {
+        console.log(`[Watch Note ID ${props.note.id}] ID changed. Resetting errors.`);
+        // Réinitialiser les erreurs locales spécifiques à la note
+        commentError.value = '';
+        reactionError.value = '';
+        reportError.value = '';
+        // L'audio sera réinitialisé par le watch sur audioSourceUrl
+    }
+}, { immediate: false }); // Ne pas lancer à l'initialisation
 
 
 const handleShare = async () => {
@@ -727,8 +948,8 @@ const logShareToBackend = async (platform) => {
 <style scoped>
   .note-card {
     background-color: #fff;
-    border-radius: 25px;
-    padding: 20px;
+    border-radius: 20px;
+    padding: 15px;
     color: white;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     position: relative;
@@ -779,8 +1000,26 @@ const logShareToBackend = async (platform) => {
       font-size: 20px;
       cursor: pointer;
   }
-  
-  .audio-player {
+  .audio-player-container {
+    margin-top: 10px;
+    padding: 5px;
+    border-top: 1px solid #eee; /* Séparateur léger */
+}
+.audio-error-message {
+    font-size: 0.85em;
+    color: #dc3545; /* Rouge erreur */
+    margin-bottom: 8px;
+    padding: 4px 8px;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+
+.audio-player {
     display: flex;
     align-items: center;
     background-color: #FFFF; /* Slightly darker background for player */
@@ -805,23 +1044,103 @@ const logShareToBackend = async (platform) => {
     margin-right: 10px;
     flex-shrink: 0; /* Empêche le bouton de rétrécir */
   }
+
+.volume-button {
+  background: none;
+  border: none;
+  color: #007bff; /* Couleur principale */
+  font-size: 1.4em; /* Taille de l'icône */
+  cursor: pointer;
+  padding: 5px;
+  line-height: 1; /* Empêche hauteur excessive */
+}
+.play-button:disabled {
+    color: #adb5bd; /* Couleur désactivée */
+    cursor: not-allowed;
+}
+.play-button:hover:not(:disabled) {
+    color: #0056b3; /* Assombrir au survol */
+}
+
+/* --- Waveform / Progress Bar --- */
+.waveform-container {
+  flex-grow: 1; /* Prend l'espace restant */
+  height: 45px; /* Hauteur de la barre */
+  background-color: #e9ecef; /* Fond neutre */
+  border-radius: 4px;
+  position: relative; /* Pour positionner la barre de progression */
+  cursor: pointer;
+  overflow: hidden; /* Cache ce qui dépasse */
+  display: flex; /* Pour aligner les barres de fond */
+  align-items: flex-end; /* Aligner les barres en bas */
+  padding: 0 3px; /* Petit espace pour les barres */
+}
+
+.waveform-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between; /* Répartir les barres */
+     opacity: 0.6; /* Rendre le fond plus subtil */
+}
+
+.waveform-background .bar {
+  display: inline-block;
+  background-color: #ced4da; /* Couleur des barres statiques */
+  width: 1.5px; /* Largeur des barres */
+  border-radius: 1px;
+  margin: 0 0.5px; /* Petit espace entre barres */
+  flex-shrink: 0; /* Empêche le rétrécissement */
+}
+
+.progress-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: rgba(0, 123, 255, 0.6); /* Bleu semi-transparent */
+  border-radius: 4px 0 0 4px; /* Arrondi seulement à gauche au début */
+  pointer-events: none; /* N'intercepte pas les clics */
+  transition: width 0.05s linear; /* Transition douce (sauf pendant drag) */
+}
+/* Style pendant le drag */
+.waveform-container.dragging .progress-bar {
+    transition: none; /* Pas de transition pendant le drag pour réactivité */
+}
+/* Optionnel: Indicateur de position (petit cercle) */
+.progress-indicator {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background-color: #0056b3;
+    border-radius: 50%;
+    pointer-events: none;
+     box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
   
   .waveform {
     flex-grow: 1;
-    height: 40px; /* Adjust height */
+    height: 40px; 
     display: flex;
     align-items: center;
     gap: 2px;
     overflow: hidden;
     margin: 0 10px;
-    min-width: 50px; /* Empêche la waveform de devenir trop petite */
+    min-width: 50px;
   }
   
   .waveform .bar {
-      background-color: #718096; /* Waveform bar color */
-      width: 3px; /* Width of each bar */
+      background-color: #718096;
+      width: 3px;
       border-radius: 2px;
-      display: inline-block; /* ou flex-shrink: 0 si parent est flex */
+      display: inline-block;
   }
   
   .duration {
@@ -1197,3 +1516,4 @@ const logShareToBackend = async (platform) => {
 
 
 </style>
+

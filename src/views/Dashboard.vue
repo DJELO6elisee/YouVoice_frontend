@@ -1,13 +1,13 @@
 <template>
   <div class="app-container">
-    <!-- MODIFICATION: Ajout du bouton Menu et appel de toggleMobileSidebar -->
     <button v-if="isMobileView" class="menu-toggle-button" @click="toggleMobileSidebar">
       <i class="fa-solid fa-bars"></i>
     </button>
 
-    <TopBar />
+    <!-- Écouter l'événement 'search' émis par TopBar -->
+    <TopBar @search="handleSearchUpdate" />
+
     <div class="main-layout">
-      <!-- MODIFICATION: Ajout de la ref="sidebarRef" -->
       <SideBar ref="sidebarRef" @show-recorder="activateRecorderView" />
 
       <div class="content-area">
@@ -16,10 +16,11 @@
           v-if="!showRecorder && loggedInUserId"
           :current-user-id="loggedInUserId"
           :backend-url="apiUrlBase"
+          :search-term="currentSearchTerm"
         />
-        <!-- Affiche un message si l'utilisateur n'est pas connecté mais qu'on n'est pas sur l'enregistreur -->
+        <!-- Affiche un message si l'utilisateur n'est pas connecté -->
          <div v-else-if="!showRecorder && !loggedInUserId" class="login-prompt">
-             Veuillez vous connecter pour voir le fil d'actualité.
+             Veuillez vous <router-link to="/login">connecter</router-link> pour voir le fil d'actualité.
          </div>
         <!-- Affiche l'enregistreur si showRecorder est vrai -->
         <AudioRecorderUI
@@ -28,96 +29,115 @@
           @send="handleRecorderAction('send')"
           @pause="handleRecorderPause"
         />
+         <!-- Optionnel: Message si l'enregistreur est montré et que l'user n'est pas connecté -->
+         <div v-else-if="showRecorder && !loggedInUserId" class="login-prompt">
+             Veuillez vous <router-link to="/login">connecter</router-link> pour enregistrer une note vocale.
+             <!-- Ou désactiver l'enregistreur si non connecté -->
+         </div>
       </div>
 
     </div>
-    <FloatingActionButton @click="activateRecorderView"/>
+    <!-- Masquer le bouton flottant si l'enregistreur est déjà affiché -->
+    <FloatingActionButton v-if="!showRecorder && loggedInUserId" @click="activateRecorderView"/>
+
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'; // Ajout de onUnmounted et computed
-import TopBar from '@/components/HeaderBar.vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import TopBar from '@/components/HeaderBar.vue'; // Assurez-vous que le nom correspond (HeaderBar vs TopBar)
 import SideBar from '@/components/SideBar.vue';
-import MainContent from '@/components/MainContent.vue'; // Ajuste le chemin
+import MainContent from '@/components/MainContent.vue';
 import AudioRecorderUI from '@/components/AudioRecorderUI.vue';
 import FloatingActionButton from '@/components/FloatingActionButton.vue';
+// Optionnel: Si vous utilisez vue-router pour le lien de connexion
+// import { RouterLink } from 'vue-router';
 
-// État pour contrôler l'affichage
+// --- État Principal ---
 const showRecorder = ref(false);
-
-// État pour les props du Feed
 const loggedInUserId = ref(null);
-// MODIFICATION: Renommer en apiUrlBase pour correspondre à son usage (fichiers statiques)
-const apiUrlBase = ref(import.meta.env.VITE_API_URL_BASE || 'http://localhost:5000'); // Utiliser la variable d'env ou défaut
+const apiUrlBase = ref(import.meta.env.VITE_API_URL_BASE || 'https://youvoiceapi-production.up.railway.app');
 
-// --- AJOUT: Logique pour le menu mobile ---
-const sidebarRef = ref(null); // Référence au composant Sidebar
-const windowWidth = ref(window.innerWidth); // Suivre la largeur de la fenêtre
+// --- NOUVEAU: État pour la recherche ---
+const currentSearchTerm = ref(''); // Stocke le terme de recherche actuel
 
-// Propriété calculée pour déterminer si on est en vue mobile
-const isMobileView = computed(() => windowWidth.value < 992); // Utilise le même breakpoint que le CSS de la sidebar
+// --- État et logique pour la vue mobile ---
+const sidebarRef = ref(null);
+const windowWidth = ref(window.innerWidth);
+const isMobileView = computed(() => windowWidth.value < 992);
 
 const handleResize = () => {
   windowWidth.value = window.innerWidth;
-  // Optionnel: Fermer automatiquement la sidebar si on redimensionne en mode desktop
   if (!isMobileView.value && sidebarRef.value) {
       sidebarRef.value.closeSidebar();
   }
 };
 
 const toggleMobileSidebar = () => {
-  // Appelle la méthode exposée par la Sidebar
   sidebarRef.value?.toggleSidebar();
 };
-// --- FIN AJOUT LOGIQUE MOBILE ---
 
-// Fonction pour activer la vue de l'enregistreur
+// --- Fonctions de navigation / affichage ---
 const activateRecorderView = () => {
   console.log('Dashboard: Activation vue enregistreur');
+  // Vérifier si l'utilisateur est connecté avant d'activer
+  if (!loggedInUserId.value) {
+      console.warn("Tentative d'activation de l'enregistreur sans être connecté.");
+       // Optionnel: rediriger vers login ou afficher un message
+       alert("Veuillez vous connecter pour enregistrer une note vocale."); // Simple alerte
+       // Ou utiliser un système de notification plus élégant
+      return;
+  }
   showRecorder.value = true;
-  // Fermer la sidebar si on est sur mobile et qu'on active l'enregistreur
   if (isMobileView.value && sidebarRef.value) {
     sidebarRef.value.closeSidebar();
   }
 };
 
-// Fonction pour revenir à la vue principale
 const handleRecorderAction = (actionType) => {
   console.log(`Dashboard: Action enregistreur (${actionType}) terminée, retour vue principale`);
   showRecorder.value = false;
   if (actionType === 'send') {
-      console.warn("Action 'send' terminée. Implémentez le rafraîchissement du feed !");
-      // TODO: Rafraîchir le feed
+      console.warn("Action 'send' terminée. Implémentez le rafraîchissement du feed dans MainContent!");
+      // IMPORTANT: MainContent devrait idéalement s'auto-rafraîchir ou vous devez
+      // trouver un moyen de lui signaler de le faire (ex: via un événement ou une ref).
+      // Une approche simple mais pas idéale serait de forcer une clé de re-rendu sur MainContent.
   }
 };
 
 const handleRecorderPause = (isPaused) => {
     console.log('Recorder pause state:', isPaused);
-    // Logique à ajouter si nécessaire
 };
 
+// --- NOUVEAU: Handler pour la mise à jour de la recherche ---
+const handleSearchUpdate = (searchTermFromHeader) => {
+    console.log('[DashboardLayout] Terme de recherche reçu:', searchTermFromHeader);
+    currentSearchTerm.value = searchTermFromHeader.trim(); // Met à jour la ref locale
+    // Si l'enregistreur est affiché, on pourrait choisir de ne pas le fermer
+    // ou de le fermer pour afficher directement les résultats.
+    // Pour l'instant, on met juste à jour la valeur, MainContent s'en chargera.
+    // Si MainContent n'est pas visible (showRecorder=true), il prendra en compte
+    // la nouvelle valeur lors de sa prochaine réapparition.
+};
 
-// Récupérer l'ID utilisateur et ajouter/retirer l'écouteur de redimensionnement
+// --- Cycle de vie ---
 onMounted(() => {
     loggedInUserId.value = localStorage.getItem('userId');
     if (!loggedInUserId.value) {
-        console.warn("DashboardLayout: Aucun userId trouvé dans localStorage.");
+        console.warn("DashboardLayout: Aucun userId trouvé.");
     } else {
-        console.log("DashboardLayout: Utilisateur connecté avec ID:", loggedInUserId.value);
+        console.log("DashboardLayout: User ID:", loggedInUserId.value);
     }
-    // Ajouter l'écouteur de redimensionnement
     window.addEventListener('resize', handleResize);
-    // Exécuter une fois pour définir l'état initial
-    handleResize();
+    handleResize(); // Appel initial
 });
 
-// --- AJOUT: Retirer l'écouteur au démontage ---
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
 });
 
 </script>
+
 
 <style scoped>
 /* Styles existants */
@@ -147,13 +167,13 @@ onUnmounted(() => {
 }
 
 .content-area {
-  flex-grow: 1;
-  overflow-y: auto; /* Permet le scroll si le contenu dépasse */
-  padding: 25px;
-  display: flex;
-  flex-direction: column;
-  background-color: #F0F2F5;
-
+  flex-grow: 1; /* Prend tout l'espace restant à droite de la sidebar */
+  overflow-y: auto; /* Permet UNIQUEMENT au contenu de scroller */
+  padding: 20px; /* Padding par défaut */
+  background-color: #F0F2F5; /* Fond de la zone de contenu */
+  padding-bottom: 120px; /* << AJOUT: Espace supplémentaire en bas (ajustez la valeur) */
+  box-sizing: border-box;
+  
 }
 
 /* --- AJOUT: Styles pour le bouton Menu Mobile --- */
@@ -187,16 +207,23 @@ onUnmounted(() => {
 }
 /* --- FIN AJOUT STYLES MOBILE --- */
 
+@media (min-width: 640px) { /* sm: */
+  .content-area { padding: 25px; padding-bottom: 80px; } /* Moins de padding bas sur desktop */
+}
+
+@media (max-width: 864px) { /* sm: */
+  .content-area { padding: 25px; padding-bottom: 110px; } /* Moins de padding bas sur desktop */
+}
 
 /* --- Ajustements pour le layout avec sidebar fixe sur desktop --- */
 @media (min-width: 992px) {
-    .main-layout {
-        /* La sidebar est maintenant position: sticky, elle prend sa place dans le flex */
-        /* Pas besoin de style spécifique ici si SideBar a sa propre largeur */
-    }
+    
     .content-area {
         /* La largeur sera automatiquement ajustée par flex-grow */
         height: 100%; /* Assure que le scroll se fait bien ici */
+        overflow-y: auto;
+        .content-area { padding: 25px; padding-bottom: 100px; } /* Moins de padding bas sur desktop */
+
     }
 }
 </style>

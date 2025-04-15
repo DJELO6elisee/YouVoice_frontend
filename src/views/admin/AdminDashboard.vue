@@ -92,7 +92,7 @@ const chartOptions = reactive({
 });
 
 // URL de base pour les API admin (adaptez si besoin)
-const apiAdminBaseUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/auth/admin`;
+const apiAdminBaseUrl = `${import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app/api'}/auth/admin`;
 
 // Fonction principale pour charger toutes les données du dashboard
 const fetchDashboardData = async () => {

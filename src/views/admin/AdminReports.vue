@@ -54,157 +54,222 @@
   </template>
   
 <script setup>
-  import { ref, onMounted, reactive, watch } from 'vue';
+  import { ref, onMounted, reactive, watch } from 'vue'; // Ajout de reactive et watch
   import ReportList from '@/components/admin/ReportList.vue';
-  import { getAdminAuthToken } from '@/utils/adminAuth';
+  import { getAdminAuthToken } from '@/utils/adminAuth'; // Importer le helper pour le token
   
+  // --- État ---
   const reports = ref([]);
-  const loading = ref(true);
+  const loading = ref(true); // Indique un chargement en cours (pour toute la page/liste)
+  const resolving = ref(false); // État spécifique pour indiquer qu'une résolution est en cours
   const error = ref('');
   
   // --- État Pagination/Filtres ---
   const currentPage = ref(1);
   const totalPages = ref(1);
-  const limit = ref(10);
-  const currentStatusFilter = ref('pending'); // Défaut
-  const totalReports = ref(0);
+  const limit = ref(10); // Nombre de signalements par page
+  const currentStatusFilter = ref('pending'); // Filtrer par 'pending' par défaut
+  const totalReports = ref(0); // Optionnel: pour afficher le nombre total
   
   // --- URL API ---
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app/api';
+  // URL base Admin (adaptez si vos routes admin sont sous /api/admin)
+  const API_ADMIN_BASE_URL = `${API_BASE_URL}/admin`; // Supposant un montage dédié
   
-  // --- Fonction Fetch API avec Vérifications ---
+  // --- Fonction Fetch API ---
   const fetchReports = async () => {
-      console.log('[AdminReports] Début fetchReports. Loading:', loading.value, 'Current Filter:', currentStatusFilter.value, 'Page:', currentPage.value);
-      loading.value = true; // Indique le début du chargement
-      error.value = '';     // Réinitialise l'erreur à chaque tentative
+      // Ne pas reset error ici si loading est juste pour le rafraichissement
+      // On peut le faire seulement si ce n'est pas un re-fetch après action
+      if (!resolving.value) { // N'affiche le loader principal que si ce n'est pas une résolution
+           loading.value = true;
+           error.value = ''; // Reset error seulement au chargement initial/filtre/page
+      }
       const token = getAdminAuthToken();
   
       if (!token) {
           error.value = "Authentification Admin requise.";
           loading.value = false;
           reports.value = [];
-          console.error("[AdminReports] Erreur: Token Admin manquant.");
           return;
       }
   
-      // Construire l'URL avec query params
-      const params = new URLSearchParams({
-          page: currentPage.value,
-          limit: limit.value,
-      });
-      if (currentStatusFilter.value) {
-          params.append('status', currentStatusFilter.value);
-      }
-      const url = `${API_BASE_URL}/reports?${params.toString()}`;
+      // Construire l'URL avec les query params
+      const params = new URLSearchParams({ page: currentPage.value, limit: limit.value });
+      if (currentStatusFilter.value) params.append('status', currentStatusFilter.value);
+      // Utilise l'endpoint admin GET /api/admin/reports
+      const url = `${API_BASE_URL}/auth/reports?${params.toString()}`;
   
-      console.log(`[AdminReports] Fetching reports depuis: ${url}`);
+      console.log(`[AdminReports] Fetching reports from: ${url}`);
       try {
-          const response = await fetch(url, {
-              headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-          });
-          console.log(`[AdminReports] Réponse Status: ${response.status}`);
+          const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } });
   
-  
-          // ===> VÉRIFICATION 1: Statut de la Réponse <===
+          // Vérification du statut
           if (!response.ok) {
               let errorMsg = `Erreur ${response.status}`;
-              let errorData = null;
-              try {
-                   errorData = await response.json(); // Essayer de lire le corps de l'erreur
-                   errorMsg = errorData.message || errorMsg;
-                   console.error("[AdminReports] Erreur API (JSON lu):", errorData);
-              } catch(e){
-                   console.error("[AdminReports] Erreur API (Réponse non-JSON ou autre problème):", await response.text());
-              }
-              throw new Error(errorMsg); // Lève une erreur qui sera attrapée par le bloc catch
+              try { const errData = await response.json(); errorMsg = errData.message || errorMsg; } catch(e){}
+              throw new Error(errorMsg);
           }
   
-          // Si response.ok est true, on continue
           const result = await response.json();
-          console.log("[AdminReports] Réponse API parsée:", JSON.stringify(result, null, 2)); // Log détaillé
+          console.log("[AdminReports] Parsed API Response:", JSON.stringify(result, null, 2)); // Log détaillé
   
-          // ===> VÉRIFICATION 2: Structure de la Réponse <===
+          // Vérification de la structure
           if (result.status === 'success' && Array.isArray(result.data?.reports)) {
-              // Assignation des données
               reports.value = result.data.reports;
               totalPages.value = result.totalPages || 1;
               currentPage.value = result.currentPage || 1;
-              totalReports.value = result.totalReports || 0;
-              console.log(`[AdminReports] Chargé ${reports.value.length} rapports. Page ${currentPage.value}/${totalPages.value}. Total: ${totalReports.value}.`);
-  
-              // ===> VÉRIFICATION 3: Données après assignation (pour déboguer réactivité) <===
-              console.log('[AdminReports] reports.value après assignation:', JSON.stringify(reports.value));
-  
+              totalReports.value = result.totalReports || 0; // Assurez-vous que le backend renvoie ça
+               console.log(`[AdminReports] Loaded ${reports.value.length} reports. Page ${currentPage.value}/${totalPages.value}. Total: ${totalReports.value}.`);
           } else {
-              // La structure n'est pas celle attendue
-              console.error("[AdminReports] Structure de réponse API inattendue:", result);
               throw new Error("Format de réponse API invalide pour les signalements.");
           }
       } catch (err) {
-          // Attrape les erreurs de fetch, response.ok false, ou structure invalide
-          console.error("[AdminReports] Erreur dans le bloc try/catch de fetchReports:", err);
+          console.error("Erreur chargement signalements:", err);
           error.value = err.message || "Impossible de charger les signalements.";
           reports.value = []; // Vider en cas d'erreur
           totalPages.value = 1;
           currentPage.value = 1;
           totalReports.value = 0;
       } finally {
-           // ===> VÉRIFICATION 4: Exécution de finally et état de loading <===
-          console.log('[AdminReports] Exécution du bloc finally. isLoading avant:', loading.value);
-          loading.value = false; // Indique la fin du chargement
-          console.log('[AdminReports] Exécution du bloc finally. isLoading après:', loading.value);
+          loading.value = false; // Fin du chargement (qu'il soit initial ou rafraîchissement)
+           console.log('[AdminReports] fetchReports finally block. Loading state:', loading.value);
       }
   };
   
   // --- Fonction de Résolution (Appel API PATCH) ---
   const handleResolveReport = async (reportId, action) => {
-      // ... (logique existante avec prompt, switch, etc.) ...
+      if (resolving.value) return; // Empêche clics multiples pendant résolution
+      resolving.value = true; // Indique qu'une résolution est en cours
+      error.value = ''; // Reset l'erreur précédente
+  
       const token = getAdminAuthToken();
-      if(!token) { error.value = "Auth requise."; return; }
+      if(!token) {
+          error.value = "Auth requise.";
+          resolving.value = false;
+          return;
+      }
   
       let newStatus = '';
       let resolutionNote = '';
-      // ... (logique switch/prompt pour définir newStatus et resolutionNote) ...
-       switch (action) { /* ... comme avant ... */ }
-       if (!newStatus) return; // Si action inconnue ou annulée
+      let performActionApiCall = null;
+      const report = reports.value.find(r => r.id === reportId); // Nécessaire pour récupérer IDs
   
-      const resolveUrl = `${API_BASE_URL}/reports/${reportId}`;
-      console.log(`[AdminReports] Sending PATCH to ${resolveUrl}`);
-      // loading.value = true; // Optionnel: réactiver loading pendant la résolution
-      error.value = '';
+      if (!report) {
+          error.value = "Erreur: rapport non trouvé localement.";
+          resolving.value = false;
+          return;
+      }
+  
+      // --- Logique de confirmation et préparation ---
+      try {
+          switch (action) {
+              case 'dismiss':
+                  if (!confirm("Vraiment rejeter ce signalement ?")) throw new Error("Action annulée par l'admin.");
+                  newStatus = 'rejected';
+                  resolutionNote = prompt("Raison du rejet (optionnel) :", "Signalement rejeté.") || 'Signalement rejeté.';
+                  if (resolutionNote === null) throw new Error("Action annulée par l'admin."); // Annulé sur prompt
+                  break;
+              case 'delete_content':
+              case 'ban_user':
+                  const isDelete = action === 'delete_content';
+                  const itemType = report.reportedVoiceNote ? 'voice-note' : (report.reportedComment ? 'comment' : null);
+                  const itemId = report.reportedVoiceNote?.id || report.reportedComment?.id;
+                  const authorId = report.reportedVoiceNote?.user?.id || report.reportedComment?.user?.id; // Nécessite include de user dans reportedItem
+                  const actionText = isDelete ? 'supprimer le contenu' : `bloquer l'auteur (${authorId?.substring(0,8)}...)`;
+  
+                  if ((isDelete && (!itemId || !itemType)) || (!isDelete && !authorId)) {
+                      throw new Error(`Impossible d'identifier ${isDelete ? 'le contenu' : 'l\'auteur'} à ${action}. Vérifiez les données du rapport.`);
+                  }
+                  if (!confirm(`Confirmez-vous de vouloir ${actionText} suite à ce signalement ?`)) throw new Error("Action annulée par l'admin.");
+  
+                  newStatus = 'resolved';
+                  resolutionNote = prompt(`Note de résolution (action: ${action}) :`, `${isDelete ? 'Contenu' : 'Auteur'} ${actionText} suite au signalement.`);
+                  if (!resolutionNote || resolutionNote.trim() === '') throw new Error("Note de résolution requise.");
+
+                  // Préparer l'appel API d'action
+                   if (isDelete) {
+                       const deleteUrl = `${API_BASE_URL}/auth/content/${itemType}/${itemId}`;
+                       performActionApiCall = async () => {
+                           console.log(`Appel API suppression: DELETE ${deleteUrl}`);
+                           const r = await fetch(deleteUrl, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                           if (!r.ok) { const d = await r.json().catch(()=>({})); throw new Error(`Erreur ${r.status} suppression contenu: ${d.message || r.statusText}`); }
+                       };
+                   } else { // Ban user
+                      // Assurer que l'admin ne se bloque pas
+                      const currentAdminId = localStorage.getItem('userId'); // Ou via store/props
+                      if (authorId === currentAdminId) throw new Error("Impossible de bloquer cet utilisateur.");
+  
+                       const blockUrl = `${API_BASE_URL}/auth/users/${authorId}/status`;
+                       performActionApiCall = async () => {
+                            console.log(`Appel API blocage: PATCH ${blockUrl}`);
+                           const r = await fetch(blockUrl, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json'}, body: JSON.stringify({ isActive: false }) });
+                           if (!r.ok) { const d = await r.json().catch(()=>({})); throw new Error(`Erreur ${r.status} blocage user: ${d.message || r.statusText}`); }
+                       };
+                   }
+                  break;
+              default:
+                  throw new Error(`Action inconnue: ${action}`);
+          }
+      } catch (userCancelOrSetupError) {
+           // Erreur venant d'un confirm/prompt annulé ou d'un setup invalide
+           console.log("Résolution annulée ou erreur de préparation:", userCancelOrSetupError.message);
+           error.value = userCancelOrSetupError.message.includes("annulée") ? '' : userCancelOrSetupError.message; // Ne pas montrer d'erreur si juste annulé
+           resolving.value = false;
+           return;
+      }
+  
+  
+      // -- Appels API --
+      const resolveUrl = `${API_BASE_URL}/auth/reports/${reportId}`; // Utilise PATCH /api/reports/:id
+      console.log(`[AdminReports] Sending PATCH to ${resolveUrl} with status: ${newStatus}`);
   
       try {
+          // --- Étape 1: Exécuter l'action (delete/ban) si nécessaire ---
+          if (performActionApiCall) {
+              await performActionApiCall();
+               console.log(`[AdminReports] Action ${action} exécutée avec succès.`);
+          }
+  
+          // --- Étape 2: Mettre à jour le statut du rapport ---
           const response = await fetch(resolveUrl, {
               method: 'PATCH',
-              headers: { /* ... vos headers ... */ },
+              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
               body: JSON.stringify({ status: newStatus, resolution: resolutionNote.trim() })
           });
   
-          console.log(`[AdminReports Resolve] Réponse Status: ${response.status}`);
-          if (!response.ok) { /* ... gestion erreur fetch ... */ throw new Error(`Erreur ${response.status}`); }
+          if (!response.ok) {
+               let errorMsg = `Erreur MàJ rapport (${response.status})`;
+               try { const errData = await response.json(); errorMsg = errData.message || errorMsg; } catch(e){}
+               throw new Error(errorMsg);
+          }
   
           const result = await response.json();
-          console.log(`Signalement ${reportId} mis à jour avec succès:`, result.data?.report);
+          console.log(`Signalement ${reportId} mis à jour:`, result.data?.report);
           alert(`Signalement marqué comme ${newStatus}.`);
   
-          // ===> VÉRIFICATION 5: Rechargement après résolution <===
-          console.log("[AdminReports Resolve] Rafraîchissement de la liste...");
-          await fetchReports(); // Recharger pour voir le changement
+          // Recharger la liste pour refléter le changement
+          await fetchReports();
   
-      } catch(err) { /* ... gestion erreur ... */ }
-      // finally { loading.value = false; } // si loading est activé au début
+      } catch (err) {
+          console.error(`Erreur résolution signalement ${reportId} (action: ${action}):`, err);
+          error.value = `Erreur résolution: ${err.message}`;
+          // Remarque: Pas d'annulation optimiste ici, on recharge juste.
+      } finally {
+          resolving.value = false; // Fin de l'action de résolution
+      }
   };
+  // --- FIN Fonction de Résolution ---
   
   // --- Fonctions UI (Pagination, Filtre) ---
   const goToPage = (page) => {
-      if (page >= 1 && page <= totalPages.value && page !== currentPage.value && !loading.value) { // Ajout !loading
+      if (page >= 1 && page <= totalPages.value && page !== currentPage.value && !loading.value && !resolving.value) { // Bloque si chargement OU résolution en cours
           currentPage.value = page;
           fetchReports();
       }
   };
   
   const applyFilter = () => {
-      if (loading.value) return; // Empêche filtre pendant chargement
+      if (loading.value || resolving.value) return; // Bloque si chargement OU résolution en cours
       currentPage.value = 1;
       fetchReports();
   };
@@ -212,15 +277,18 @@
   // Charger initialement
   onMounted(() => {
       console.log("[AdminReports] Composant monté, lancement initial de fetchReports.");
-      fetchReports();
+      if (getAdminAuthToken()) {
+           fetchReports();
+      } else {
+          error.value = "Accès Admin requis.";
+          loading.value = false;
+      }
   });
 </script>
   
+
   <style scoped>
   /* Styles généraux pour la page */
-  .admin-reports-page {
-    /* ... */
-  }
   .page-title {
     font-size: 1.875rem; line-height: 2.25rem; font-weight: 600;
     margin-bottom: 1.5rem; color: #ffffff;
