@@ -259,14 +259,14 @@ const handleSearch = (event) => {
   }
 
   .navbar-left h1 {
-    font-size: 1.2em; /* Taille originale */
+    font-size: 1.1em; /* Taille originale */
     margin-left: 8px;
 
   }
 
   .navbar-right {
     gap: 15px; /* Espace original */
-        margin-left: 15px;
+    margin-left: 11px;
 
   }
 
@@ -276,7 +276,7 @@ const handleSearch = (event) => {
 
   }
    .search-bar input {
-       min-width: 180px; /* Largeur originale */
+       min-width: 150px; /* Largeur originale */
        font-size: 1em; /* Taille texte originale */
    }
 
