@@ -171,7 +171,7 @@ onUnmounted(() => {
   overflow-y: auto; /* Permet UNIQUEMENT au contenu de scroller */
   padding: 20px; /* Padding par défaut */
   background-color: #F0F2F5; /* Fond de la zone de contenu */
-  padding-bottom: 120px; /* << AJOUT: Espace supplémentaire en bas (ajustez la valeur) */
+  padding-bottom: 110px; /* << AJOUT: Espace supplémentaire en bas (ajustez la valeur) */
   box-sizing: border-box;
   
 }
@@ -212,7 +212,7 @@ onUnmounted(() => {
 }
 
 @media (max-width: 864px) { /* sm: */
-  .content-area { padding: 25px; padding-bottom: 100px; } /* Moins de padding bas sur desktop */
+  .content-area { padding: 25px; padding-bottom: 90px; } /* Moins de padding bas sur desktop */
 }
 
 /* --- Ajustements pour le layout avec sidebar fixe sur desktop --- */
@@ -222,7 +222,7 @@ onUnmounted(() => {
         /* La largeur sera automatiquement ajustée par flex-grow */
         height: 100%; /* Assure que le scroll se fait bien ici */
         overflow-y: auto;
-        .content-area { padding: 25px; padding-bottom: 95px; } /* Moins de padding bas sur desktop */
+        .content-area { padding: 25px; padding-bottom: 90px; } /* Moins de padding bas sur desktop */
 
     }
 }

@@ -10,7 +10,7 @@
         <i class="fa-solid fa-magnifying-glass search-icon"></i>
         <input
            type="search"
-           placeholder="Chercher par @nom ou description..."
+           placeholder="Rehercher..."
            :value="currentSearchTerm"
            @input="handleSearch"
         />
