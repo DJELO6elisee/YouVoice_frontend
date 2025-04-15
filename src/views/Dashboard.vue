@@ -171,7 +171,7 @@ onUnmounted(() => {
   overflow-y: auto; /* Permet UNIQUEMENT au contenu de scroller */
   padding: 20px; /* Padding par défaut */
   background-color: #F0F2F5; /* Fond de la zone de contenu */
-  padding-bottom: 110px; /* << AJOUT: Espace supplémentaire en bas (ajustez la valeur) */
+  padding-bottom: 80px; /* << AJOUT: Espace supplémentaire en bas (ajustez la valeur) */
   box-sizing: border-box;
   
 }
@@ -185,8 +185,8 @@ onUnmounted(() => {
   background-color: rgba(255, 255, 255, 0.9); /* Fond légèrement transparent */
   border: 1px solid #ccc;
   border-radius: 50%;
-  width: 33px;
-  height: 33px;
+  width: 35px;
+  height: 35px;
   font-size: 1.2em;
   color: #333;
   cursor: pointer;
@@ -207,23 +207,23 @@ onUnmounted(() => {
 }
 /* --- FIN AJOUT STYLES MOBILE --- */
 
-@media (min-width: 640px) { /* sm: */
-  .content-area { padding: 25px; padding-bottom: 60px; } /* Moins de padding bas sur desktop */
+@media (min-width: 640px) {
+  .content-area { padding: 25px; padding-bottom: 50px; } /* Moins de padding bas sur desktop */
 }
 
 @media (max-width: 864px) { /* sm: */
-  .content-area { padding: 25px; padding-bottom: 90px; } /* Moins de padding bas sur desktop */
+  .content-area { padding: 25px; padding-bottom: 70px; } /* Moins de padding bas sur desktop */
 }
 
 /* --- Ajustements pour le layout avec sidebar fixe sur desktop --- */
-@media (min-width: 992px) {
+@media (max-width: 992px) {
     
-    .content-area {
-        /* La largeur sera automatiquement ajustée par flex-grow */
-        height: 100%; /* Assure que le scroll se fait bien ici */
-        overflow-y: auto;
-        .content-area { padding: 25px; padding-bottom: 90px; } /* Moins de padding bas sur desktop */
+  .content-area {
+    /* La largeur sera automatiquement ajustée par flex-grow */
+    height: 100%;
+    overflow-y: auto;
+    .content-area { padding: 25px; padding-bottom: 70px; } /* Moins de padding bas sur desktop */
 
-    }
+  }
 }
 </style>

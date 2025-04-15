@@ -1182,7 +1182,7 @@ const logShareToBackend = async (platform) => {
   
   
   .comment-text {
-    font-size: 14px;
+    font-size: 10px;
     color: #e2e8f0; /* Even lighter text */
     margin: 0;
     line-height: 1.4;
@@ -1362,7 +1362,7 @@ const logShareToBackend = async (platform) => {
 /* Style de base pour un item commentaire (peut légèrement modifier l'existant si besoin) */
 /* Assurez-vous que ces styles de base sont présents et corrects */
 .comment-item {
-    font-size: 1.2em;
+    font-size: 1em;
     margin-bottom: 8px;
     padding-bottom: 8px;
     border-bottom: 1px solid rgba(255, 255, 255, 0); /* Séparateur très léger */
@@ -1383,7 +1383,7 @@ const logShareToBackend = async (platform) => {
     color: #555555; /* Gris clair pour le nom */
     margin-right: 5px;
     font-weight: bold;
-    font-size: 1.1em;
+    font-size: 0.9em;
     display: inline; /* Assurez-vous qu'il est inline ou inline-block */
 }
 /* Style pour le placeholder (vérifiez s'il existe déjà) */

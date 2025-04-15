@@ -48,11 +48,20 @@
 /* Optionnel: Ajustements pour écrans plus larges si nécessaire */
 /* Souvent, le positionnement fixed bottom/right fonctionne bien sur toutes les tailles */
 
+@media (max-width: 476px) {
+    .fab {
+        width: 60px;
+        height: 60px;
+        bottom: 80px;
+        font-size: 26px;
+    }
+}
+
 @media (max-width: 834px) {
     .fab {
         width: 60px;
         height: 60px;
-        bottom: 105px;
+        bottom: 90px;
         font-size: 26px;
     }
 }
@@ -61,7 +70,7 @@
     .fab {
         width: 60px;
         height: 60px;
-        bottom: 50px;
+        bottom: 40px;
         font-size: 26px;
     }
 }
