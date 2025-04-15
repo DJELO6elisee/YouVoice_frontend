@@ -52,7 +52,7 @@
     .fab {
         width: 60px;
         height: 60px;
-        bottom: 110px;
+        bottom: 105px;
         font-size: 26px;
     }
 }
@@ -61,7 +61,7 @@
     .fab {
         width: 60px;
         height: 60px;
-        bottom: 80px;
+        bottom: 50px;
         font-size: 26px;
     }
 }

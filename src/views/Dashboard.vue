@@ -197,7 +197,7 @@ onUnmounted(() => {
   transition: background-color 0.2s;
 }
 .menu-toggle-button:hover {
-    background-color: #f0f0f0;
+  background-color: #f0f0f0;
 }
 /* Cache le bouton sur les écrans larges par défaut */
 @media (min-width: 992px) { /* Doit correspondre au breakpoint de la Sidebar */
@@ -208,11 +208,11 @@ onUnmounted(() => {
 /* --- FIN AJOUT STYLES MOBILE --- */
 
 @media (min-width: 640px) { /* sm: */
-  .content-area { padding: 25px; padding-bottom: 80px; } /* Moins de padding bas sur desktop */
+  .content-area { padding: 25px; padding-bottom: 60px; } /* Moins de padding bas sur desktop */
 }
 
 @media (max-width: 864px) { /* sm: */
-  .content-area { padding: 25px; padding-bottom: 110px; } /* Moins de padding bas sur desktop */
+  .content-area { padding: 25px; padding-bottom: 100px; } /* Moins de padding bas sur desktop */
 }
 
 /* --- Ajustements pour le layout avec sidebar fixe sur desktop --- */
@@ -222,7 +222,7 @@ onUnmounted(() => {
         /* La largeur sera automatiquement ajustée par flex-grow */
         height: 100%; /* Assure que le scroll se fait bien ici */
         overflow-y: auto;
-        .content-area { padding: 25px; padding-bottom: 100px; } /* Moins de padding bas sur desktop */
+        .content-area { padding: 25px; padding-bottom: 95px; } /* Moins de padding bas sur desktop */
 
     }
 }
