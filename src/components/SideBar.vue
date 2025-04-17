@@ -192,6 +192,9 @@
       return notifications.value.filter(n => !n.read).length;
   });
 
+  const userAvatarUrl = computed(() => {
+    return formatFullAvatarUrl(avatarPath);
+  });
 
   // --- Fonctions Sidebar ---
   const openSidebar = () => {
@@ -293,10 +296,7 @@
       }
   };
 
-  const userAvatarUrl = computed(() => {
-    return formatFullAvatarUrl(avatarPath);
-  });
-
+  
   // --- Hook Cycle de Vie ---
   onMounted(() => {
       fetchUserProfile(); // Charger le profil au montage
