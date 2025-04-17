@@ -186,10 +186,7 @@
 
   // --- Propriété Calculée Avatar Utilisateur ---
   // Utilise la fonction helper pour construire l'URL
-  const userAvatarUrl = computed(() => {
-    return formatFullAvatarUrl(userAvatarPath.value);
-  });
-
+  
   // --- Compteur pour le Badge Notifications ---
   const unreadNotificationCount = computed(() => {
       return notifications.value.filter(n => !n.read).length;
@@ -295,6 +292,10 @@
           isLoadingProfile.value = false;
       }
   };
+
+  const userAvatarUrl = computed(() => {
+    return formatFullAvatarUrl(user.avatar);
+  });
 
   // --- Hook Cycle de Vie ---
   onMounted(() => {
