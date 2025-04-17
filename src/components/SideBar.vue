@@ -135,10 +135,8 @@
   const emit = defineEmits(['show-recorder']);
   const router = useRouter();
 
-  // --- URLs de l'API (Standardisé) ---
   // Utilise la variable d'environnement VITE_API_BASE_URL si définie, sinon http://localhost:5000
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app';
-//   const API_ENDPOINT_BASE = `${API_BASE_URL}`; 
 
   // --- État Sidebar ---
   const isSidebarOpen = ref(false);
@@ -331,7 +329,7 @@
       if (!token) { notificationsError.value = "Non connecté."; isLoadingNotifications.value = false; return; }
 
       // URL pour récupérer les notifications (supposons que l'API renvoie les plus récentes, lues ou non)
-      const url = `${API_BASE_URL}/api/notifications`; // Ajustez l'URL si nécessaire
+      const url = `${API_BASE_URL}/notifications`; // Ajustez l'URL si nécessaire
       console.log(`[Notifications] Fetching from ${url}`);
       try {
           const response = await fetch(url, {
@@ -369,7 +367,7 @@
 
       console.log("[Notifications] Marquage de toutes les notifications comme lues...");
       // URL pour marquer toutes comme lues
-      const url = `${API_BASE_URL}/api/notifications/mark-all-read`;
+      const url = `${API_BASE_URL}/notifications/mark-all-read`;
       try {
           const response = await fetch(url, {
               method: 'POST', // Ou PATCH selon votre API
@@ -407,7 +405,7 @@
       notification.read = true; // <-- MISE À JOUR OPTIMISTE : Marquer comme lu dans l'UI immédiatement
 
       // URL pour marquer une notification spécifique comme lue
-      const url = `${API_BASE_URL}/api/notifications/${notification.id}/read`;
+      const url = `${API_BASE_URL}/notifications/${notification.id}/read`;
       try {
           const response = await fetch(url, {
               method: 'PATCH', // Ou POST selon votre API
