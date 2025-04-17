@@ -130,7 +130,7 @@
   
 <script setup>
   import { useRouter } from 'vue-router';
-  import { ref, onMounted, computed, defineEmits, defineExpose } from 'vue';
+  import { ref, onMounted, computed, defineEmits, defineExpose, watch } from 'vue';
 
   const emit = defineEmits(['show-recorder']);
   const router = useRouter();
@@ -281,7 +281,7 @@
               userName.value = user.username || '';
               userEmail.value = user.email || '';
               userAvatarPath.value = user.avatar || ''; // Stocke le chemin tel quel
-              console.log("[Sidebar] User profile loaded:", { username: user.username, avatarPath: user.avatar });
+              console.log("[Sidebar] User profile loaded:", { username: user.username, avatarPath: user.avatar, userAvatarPathValue: userAvatarPath.value});
           } else {
               throw new Error(`Réponse API profil invalide: ${JSON.stringify(result)}`);
           }
