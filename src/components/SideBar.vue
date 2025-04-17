@@ -294,7 +294,7 @@
   };
 
   const userAvatarUrl = computed(() => {
-    return formatFullAvatarUrl(user.avatar);
+    return formatFullAvatarUrl(avatarPath);
   });
 
   // --- Hook Cycle de Vie ---
