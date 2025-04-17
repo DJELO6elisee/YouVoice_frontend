@@ -138,8 +138,7 @@
   // --- URLs de l'API (Standardisé) ---
   // Utilise la variable d'environnement VITE_API_BASE_URL si définie, sinon http://localhost:5000
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app';
-  // URL pour les API (si votre /api est préfixé dans server.js, sinon ajoutez /api ici)
-  const API_ENDPOINT_BASE = `${API_BASE_URL}`; // Ou `${API_BASE_URL}/api` si nécessaire
+//   const API_ENDPOINT_BASE = `${API_BASE_URL}`; 
 
   // --- État Sidebar ---
   const isSidebarOpen = ref(false);
@@ -243,7 +242,7 @@
       }
 
       // Construire l'URL de l'API /me
-      const url = `${API_ENDPOINT_BASE}/api/auth/me`; // Assurez-vous que le préfixe /api est correct
+      const url = `${API_BASE_URL}/api/auth/me`; // Assurez-vous que le préfixe /api est correct
       console.log(`[Sidebar] Fetching user profile from ${url}`);
 
       try {
@@ -332,7 +331,7 @@
       if (!token) { notificationsError.value = "Non connecté."; isLoadingNotifications.value = false; return; }
 
       // URL pour récupérer les notifications (supposons que l'API renvoie les plus récentes, lues ou non)
-      const url = `${API_ENDPOINT_BASE}/api/notifications`; // Ajustez l'URL si nécessaire
+      const url = `${API_BASE_URL}/api/notifications`; // Ajustez l'URL si nécessaire
       console.log(`[Notifications] Fetching from ${url}`);
       try {
           const response = await fetch(url, {
@@ -370,7 +369,7 @@
 
       console.log("[Notifications] Marquage de toutes les notifications comme lues...");
       // URL pour marquer toutes comme lues
-      const url = `${API_ENDPOINT_BASE}/api/notifications/mark-all-read`;
+      const url = `${API_BASE_URL}/api/notifications/mark-all-read`;
       try {
           const response = await fetch(url, {
               method: 'POST', // Ou PATCH selon votre API
@@ -408,7 +407,7 @@
       notification.read = true; // <-- MISE À JOUR OPTIMISTE : Marquer comme lu dans l'UI immédiatement
 
       // URL pour marquer une notification spécifique comme lue
-      const url = `${API_ENDPOINT_BASE}/api/notifications/${notification.id}/read`;
+      const url = `${API_BASE_URL}/api/notifications/${notification.id}/read`;
       try {
           const response = await fetch(url, {
               method: 'PATCH', // Ou POST selon votre API
