@@ -186,15 +186,15 @@
 
   // --- Propriété Calculée Avatar Utilisateur ---
   // Utilise la fonction helper pour construire l'URL
-  
+  const userAvatarUrl = computed(() => {
+    return formatFullAvatarUrl(userAvatarPath.value);
+  });
+
   // --- Compteur pour le Badge Notifications ---
   const unreadNotificationCount = computed(() => {
       return notifications.value.filter(n => !n.read).length;
   });
 
-  const userAvatarUrl = computed(() => {
-    return formatFullAvatarUrl(avatarPath);
-  });
 
   // --- Fonctions Sidebar ---
   const openSidebar = () => {
@@ -296,7 +296,6 @@
       }
   };
 
-  
   // --- Hook Cycle de Vie ---
   onMounted(() => {
       fetchUserProfile(); // Charger le profil au montage
