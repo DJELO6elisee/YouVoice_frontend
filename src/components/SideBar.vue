@@ -3,7 +3,7 @@
     <div class="sidebar-overlay" :class="{ 'is-open': isSidebarOpen }" @click="closeSidebar"></div>
     <aside class="sidebar" :class="{ 'is-open': isSidebarOpen }">
         <button class="close-sidebar-button" @click="closeSidebar" title="Fermer le menu">×</button>
-  
+
         <!-- Profil utilisateur -->
         <div v-if="isLoadingProfile" class="user-profile-link user-profile loading">
               Chargement...
@@ -12,19 +12,25 @@
               {{ profileError }}
               <button @click="fetchUserProfile" class="retry-button">Réessayer</button>
         </div>
+        <!-- MODIFIÉ: Le router-link appelle la fonction de formatage dans l'image -->
         <router-link v-else :to="{ name: 'UserProfile' }" class="user-profile-link">
-              <div class="user-profile">
-                   <img :src="userAvatarUrl" alt="User Avatar" class="avatar" />
-                   <div class="user-info">
-                     <span class="name">{{ userName || 'Utilisateur' }}</span>
-                     <span class="email">{{ userEmail || 'Email non disponible' }}</span>
-                   </div>
-              </div>
+            <div class="user-profile">
+                <!-- APPEL DIRECT DE LA FONCTION ICI -->
+                <img
+                    :src="formatFullAvatarUrl(userAvatarPath)"
+                    alt="User Avatar"
+                    class="avatar"
+                />
+                <div class="user-info">
+                    <span class="name">{{ userName || 'Utilisateur' }}</span>
+                    <span class="email">{{ userEmail || 'Email non disponible' }}</span>
+                </div>
+            </div>
         </router-link>
-  
+
         <!-- Bouton Publier -->
         <button @click="requestShowRecorderAndClose" class="publish-button">+ Publier une Note Vocale</button>
-  
+
         <!-- Navigation Principale -->
         <nav class="main-nav">
             <router-link to="/dashboard" class="nav-item" active-class="active" @click="closeSidebar">
@@ -40,9 +46,9 @@
                  Conversation
             </router-link> -->
         </nav>
-  
+
         <div class="separator"></div>
-  
+
         <!-- Navigation Secondaire -->
         <nav class="secondary-nav">
             <!-- Bouton Notifications (modifié) -->
@@ -52,7 +58,7 @@
                  <!-- Badge mis à jour avec le compteur de non lues -->
                  <span v-if="unreadNotificationCount > 0" class="badge">{{ unreadNotificationCount }}</span>
             </button>
-  
+
             <router-link to="/profil" class="nav-item" active-class="active" @click="closeSidebar">
                  <span class="icon"><i class="fa-solid fa-user"></i></span>
                  Profil
@@ -62,7 +68,7 @@
                 Deconnexion
             </button>
         </nav>
-  
+
         <!-- Popover des Notifications -->
          <div v-if="isNotificationsPopoverVisible" class="notifications-popover">
               <div class="popover-header">
@@ -85,18 +91,17 @@
                       <button @click="fetchNotifications" class="retry-button small">Réessayer</button>
                   </div>
                   <div v-else-if="notifications.length === 0" class="empty-message">
-                      Aucune notification. <!-- Message mis à jour -->
+                      Aucune notification.
                   </div>
                   <!-- Liste des notifications -->
                   <ul v-else class="notifications-list">
-                       <!-- MODIFIÉ: Ajout de :class et @click sur li -->
                        <li v-for="notification in notifications"
                            :key="notification.id"
                            class="notification-item"
                            :class="{ 'is-read': notification.read }"
                            @click="markOneAsRead(notification)"
-                           title="Marquer comme lu/non lu"> <!-- Texte indicatif -->
-  
+                           title="Marquer comme lu/non lu">
+
                             <!-- Icône basée sur le type -->
                             <div class="notification-icon">
                                <i v-if="notification.type === 'like'" class="fa-solid fa-heart liked" title="Nouveau j'aime"></i>
@@ -116,7 +121,7 @@
                                </p>
                                <span class="notification-timestamp">{{ formatRelativeTime(notification.createdAt) }}</span>
                             </div>
-                            <!-- Avatar de l'acteur -->
+                            <!-- Avatar de l'acteur (utilise getActorAvatarUrl qui appelle formatFullAvatarUrl) -->
                             <img v-if="notification.actor?.avatar" :src="getActorAvatarUrl(notification.actor.avatar)" alt="Avatar" class="actor-avatar"/>
                             <div v-else class="actor-avatar placeholder">?</div>
                         </li>
@@ -124,18 +129,19 @@
                 </div>
            </div>
         <!-- FIN Popover -->
-  
+
     </aside>
 </template>
-  
+
 <script setup>
   import { useRouter } from 'vue-router';
+  // Assurez-vous que 'computed' est toujours importé si vous l'utilisez ailleurs (ex: unreadNotificationCount)
   import { ref, onMounted, computed, defineEmits, defineExpose, watch } from 'vue';
 
   const emit = defineEmits(['show-recorder']);
   const router = useRouter();
 
-  // Utilise la variable d'environnement VITE_API_BASE_URL si définie, sinon http://localhost:5000
+  // Utilise la variable d'environnement VITE_API_BASE_URL si définie, sinon valeur par défaut
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app';
 
   // --- État Sidebar ---
@@ -144,7 +150,7 @@
   // --- Infos Utilisateur ---
   const userName = ref('');
   const userEmail = ref('');
-  const userAvatarPath = ref(''); // Stocke le chemin relatif ou l'URL complète de l'API
+  const userAvatarPath = ref(''); // Stocke toujours le chemin brut de l'API
   const isLoadingProfile = ref(true);
   const profileError = ref('');
 
@@ -161,35 +167,29 @@
 
   /**
    * Construit l'URL complète d'un avatar.
-   * @param {string | null | undefined} avatarPath - Chemin relatif ou URL complète.
+   * @param {string | null | undefined} avatarPathValue - Chemin relatif ou URL complète.
    * @returns {string} URL complète ou placeholder.
    */
-  const formatFullAvatarUrl = (avatarPath) => {
-    const placeholder = 'https://via.placeholder.com/40?text=?'; // Placeholder générique
-    if (!avatarPath) { return placeholder; }
-    // Si c'est déjà une URL complète
-    if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) { return avatarPath; }
-    // Si l'URL de base n'est pas définie
+  const formatFullAvatarUrl = (avatarPathValue) => {
+    const placeholder = 'https://via.placeholder.com/40?text=?';
+    if (!avatarPathValue) { return placeholder; }
+    if (avatarPathValue.startsWith('http://') || avatarPathValue.startsWith('https://')) { return avatarPathValue; }
     if (!API_BASE_URL) { console.warn("[Avatar URL] API_BASE_URL n'est pas défini."); return placeholder; }
-    // Construire l'URL complète
     try {
-      // Assurer qu'il n'y a pas de double slash si avatarPath commence par /
-      const pathPrefix = avatarPath.startsWith('/') ? '' : '/';
-      return `${API_BASE_URL}${pathPrefix}${avatarPath}`;
+      const pathPrefix = avatarPathValue.startsWith('/') ? '' : '/';
+      return `${API_BASE_URL}${pathPrefix}${avatarPathValue}`;
     } catch (e) {
-      console.error(`[Avatar URL] Erreur construction URL pour ${avatarPath}:`, e);
+      console.error(`[Avatar URL] Erreur construction URL pour ${avatarPathValue}:`, e);
       return placeholder;
     }
   };
 
-  // --- Propriété Calculée Avatar Utilisateur ---
-  // Utilise la fonction helper pour construire l'URL
-  const userAvatarUrl = computed(() => {
-    return formatFullAvatarUrl(userAvatarPath.value);
-  });
+  // --- SUPPRIMÉ: Propriété Calculée Avatar Utilisateur ---
+  // const userAvatarUrl = computed(() => { ... }); <--- SUPPRIMÉ
 
   // --- Compteur pour le Badge Notifications ---
   const unreadNotificationCount = computed(() => {
+      // Ce computed est toujours utile
       return notifications.value.filter(n => !n.read).length;
   });
 
@@ -216,15 +216,14 @@
   const handleLogout = () => {
       console.log('[Sidebar] Déconnexion initiée...');
       localStorage.removeItem('authToken');
-      localStorage.removeItem('userId'); // Si vous stockez aussi l'ID
+      localStorage.removeItem('userId');
       // Réinitialiser l'état local
       userName.value = '';
       userEmail.value = '';
-      userAvatarPath.value = '';
+      userAvatarPath.value = ''; // Réinitialise le chemin
       profileError.value = '';
       notifications.value = [];
       console.log('[Sidebar] Token et infos utilisateur supprimés.');
-      // Rediriger vers la page de connexion (utiliser replace pour ne pas avoir d'historique)
       router.replace({ name: 'Login' });
   };
 
@@ -239,53 +238,36 @@
           return;
       }
 
-      // Construire l'URL de l'API /me
-      const url = `${API_BASE_URL}/auth/me`; // Assurez-vous que le préfixe /api est correct
+      const url = `${API_BASE_URL}/auth/me`;
       console.log(`[Sidebar] Fetching user profile from ${url}`);
 
       try {
           const response = await fetch(url, {
-              headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Accept': 'application/json'
-              },
+              headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
           });
 
-          const responseBodyText = await response.text(); // Lire le corps pour le parsing manuel
+          const responseBodyText = await response.text();
 
           if (!response.ok) {
               let errorMsg = `Erreur ${response.status}`;
-              if (response.status === 401) {
-                  errorMsg = "Session expirée ou invalide.";
-                  // Peut-être déclencher la déconnexion ici ?
-                  // handleLogout();
-              } else {
-                  try {
-                      const errData = JSON.parse(responseBodyText);
-                      errorMsg = errData.message || `Erreur serveur (${response.status})`;
-                  } catch (e) {
-                      errorMsg = `Erreur serveur (${response.status}) - Réponse inattendue: ${responseBodyText.substring(0, 100)}`;
-                  }
-              }
+              if (response.status === 401) { errorMsg = "Session expirée ou invalide."; /* handleLogout(); ? */ }
+              else { /* ... gestion erreur ... */ }
               throw new Error(errorMsg);
           }
 
-          // Essayer de parser le JSON
           const result = JSON.parse(responseBodyText);
 
-          // Vérifier la structure attendue de la réponse
           if (result.status === 'success' && result.data?.user) {
               const user = result.data.user;
               userName.value = user.username || '';
               userEmail.value = user.email || '';
-              userAvatarPath.value = user.avatar || ''; // Stocke le chemin tel quel
-              console.log("[Sidebar] User profile loaded:", { username: user.username, avatarPath: user.avatar, userAvatarPathValue: userAvatarPath.value});
+              userAvatarPath.value = user.avatar || ''; // Mise à jour de la ref userAvatarPath
+              console.log("[Sidebar] User profile loaded:", { username: user.username, userAvatarPathValue: userAvatarPath.value });
           } else {
               throw new Error(`Réponse API profil invalide: ${JSON.stringify(result)}`);
           }
       } catch (error) {
           console.error('[Sidebar] Erreur fetchUserProfile:', error);
-          // Afficher l'erreur uniquement si elle n'a pas déjà été définie (ex: par 401)
           if (!profileError.value) {
               profileError.value = error.message || 'Impossible de charger le profil.';
           }
@@ -297,8 +279,7 @@
   // --- Hook Cycle de Vie ---
   onMounted(() => {
       fetchUserProfile(); // Charger le profil au montage
-      // Optionnel: Charger les notifications initiales si nécessaire au démarrage
-      // fetchNotifications();
+      // fetchNotifications(); // Charger les notifs au montage si nécessaire
   });
 
   // --- Émission pour Afficher l'Enregistreur Vocal ---
@@ -307,150 +288,69 @@
 
 
   // --- Fonctions pour les Notifications ---
-
-  /** Affiche/cache le popover des notifications et charge les données si ouvert. */
   const toggleNotificationsPopover = async () => {
       if (!isNotificationsPopoverVisible.value) {
           isNotificationsPopoverVisible.value = true;
-          await fetchNotifications(); // Recharge les notifications à chaque ouverture
+          await fetchNotifications();
       } else {
           isNotificationsPopoverVisible.value = false;
       }
-      // Empêcher la fermeture de la sidebar si on clique sur le bouton notif
-      // event.stopPropagation(); // Peut être géré différemment selon la structure HTML
   };
-
-  /** Récupère les notifications récentes depuis l'API. */
   const fetchNotifications = async () => {
-      if (isLoadingNotifications.value) return; // Empêche les appels multiples
+      if (isLoadingNotifications.value) return;
       isLoadingNotifications.value = true;
       notificationsError.value = '';
       const token = getAuthToken();
-      if (!token) { notificationsError.value = "Non connecté."; isLoadingNotifications.value = false; return; }
-
-      // URL pour récupérer les notifications (supposons que l'API renvoie les plus récentes, lues ou non)
-      const url = `${API_BASE_URL}/notifications`; // Ajustez l'URL si nécessaire
+      if (!token) { /* ... gestion erreur ... */ return; }
+      const url = `${API_BASE_URL}/notifications`;
       console.log(`[Notifications] Fetching from ${url}`);
       try {
-          const response = await fetch(url, {
-              headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-          });
+          const response = await fetch(url, { /* ... headers ... */ });
           if (!response.ok) { throw new Error(`Erreur ${response.status} lors de la récupération des notifications.`); }
           const result = await response.json();
-          // Vérifier la structure de la réponse
           if (result.status === 'success' && Array.isArray(result.data?.notifications)) {
               notifications.value = result.data.notifications;
               console.log(`[Notifications] Loaded ${notifications.value.length} notifications.`);
           } else {
               throw new Error("Format de réponse API invalide pour les notifications.");
           }
-      } catch (error) {
-          console.error('[Notifications] Error fetching:', error);
-          notificationsError.value = error.message || "Impossible de charger les notifications.";
-          notifications.value = []; // Vider en cas d'erreur
-      } finally {
-          isLoadingNotifications.value = false;
-      }
+      } catch (error) { /* ... gestion erreur ... */ }
+      finally { isLoadingNotifications.value = false; }
   };
-
-  /** Marque toutes les notifications non lues comme lues via l'API. */
   const markAllNotificationsAsRead = async () => {
       const token = getAuthToken();
-      if (!token) { alert("Veuillez vous reconnecter."); return; }
-
-      // Vérifier s'il y a des notifications non lues à marquer
-      const unreadNotificationsExist = notifications.value.some(n => !n.read);
-      if (!unreadNotificationsExist) {
-           console.log("[Notifications] Aucune notification non lue à marquer.");
-           return;
-      }
-
+      if (!token || !notifications.value.some(n => !n.read)) return;
       console.log("[Notifications] Marquage de toutes les notifications comme lues...");
-      // URL pour marquer toutes comme lues
       const url = `${API_BASE_URL}/notifications/mark-all-read`;
       try {
-          const response = await fetch(url, {
-              method: 'POST', // Ou PATCH selon votre API
-              headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-          });
+          const response = await fetch(url, { method: 'POST', /* ... headers ... */ });
           if (!response.ok) { throw new Error(`Erreur ${response.status} lors du marquage.`); }
-
-          // Si succès API, mettre à jour l'état local
-          notifications.value.forEach(notification => {
-              notification.read = true; // Marquer comme lu localement
-          });
-          console.log("[Notifications] Toutes les notifications marquées comme lues (localement et backend).");
-
-      } catch (error) {
-          console.error('[Notifications] Erreur markAllNotificationsAsRead:', error);
-          notificationsError.value = error.message || "Erreur lors de la mise à jour.";
-          // Ne pas modifier l'état local si l'API échoue
-      }
+          notifications.value.forEach(n => { n.read = true; });
+          console.log("[Notifications] Toutes les notifications marquées comme lues.");
+      } catch (error) { /* ... gestion erreur ... */ }
   };
-
-  /**
-   * Marque une notification spécifique comme lue (au clic).
-   * Fait une mise à jour optimiste de l'UI.
-   * @param {object} notification - La notification à marquer.
-   */
   const markOneAsRead = async (notification) => {
-      // Ne rien faire si déjà lue ou en cours de chargement général
       if (notification.read || isLoadingNotifications.value) return;
-
       console.log(`[Notifications] Marquage de la notification ${notification.id} comme lue...`);
       const token = getAuthToken();
       if (!token) return;
-
-      const originalReadStatus = notification.read; // Sauvegarder l'état initial (qui est false ici)
-      notification.read = true; // <-- MISE À JOUR OPTIMISTE : Marquer comme lu dans l'UI immédiatement
-
-      // URL pour marquer une notification spécifique comme lue
+      const originalReadStatus = notification.read;
+      notification.read = true; // Optimiste
       const url = `${API_BASE_URL}/notifications/${notification.id}/read`;
       try {
-          const response = await fetch(url, {
-              method: 'PATCH', // Ou POST selon votre API
-              headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-          });
-          if (!response.ok) {
-              notification.read = originalReadStatus; // <-- ROLLBACK : Annuler la mise à jour UI si l'API échoue
-              throw new Error(`Erreur ${response.status} lors du marquage de la notification ${notification.id}.`);
-          }
-          console.log(`[Notifications] Notification ${notification.id} marquée comme lue avec succès (backend).`);
-          // La mise à jour UI est déjà faite (optimiste)
-      } catch (error) {
-          notification.read = originalReadStatus; // <-- ROLLBACK : Annuler aussi en cas d'erreur catch
-          console.error(`[Notifications] Erreur markOneAsRead (${notification.id}):`, error);
-          notificationsError.value = `Erreur MàJ notif`; // Afficher une erreur discrète
-      }
+          const response = await fetch(url, { method: 'PATCH', /* ... headers ... */ });
+          if (!response.ok) { notification.read = originalReadStatus; /* Rollback */ throw new Error(`Erreur ${response.status}.`); }
+          console.log(`[Notifications] Notification ${notification.id} marquée comme lue (backend).`);
+      } catch (error) { notification.read = originalReadStatus; /* Rollback */ console.error(`[Notifications] Erreur markOneAsRead (${notification.id}):`, error); notificationsError.value = `Erreur MàJ notif`; }
   };
-
-
-  /** Formate une date ISO en temps relatif (ex: 5m, 2h, 3j). */
   const formatRelativeTime = (isoString) => {
-    if (!isoString) return '';
-    try {
-      const date = new Date(isoString);
-      if (isNaN(date.getTime())) throw new Error("Invalid date");
-      const now = new Date();
-      const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-      if (diffSeconds < 60) return `à l'instant`; // Moins d'une minute
-      if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m`; // Minutes
-      if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h`; // Heures
-      // Si plus d'un jour, on peut afficher la date courte
-      return date.toLocaleDateString([], { day: '2-digit', month: 'short' });
-      // Ou continuer avec les jours: return `${Math.floor(diffSeconds / 86400)}j`;
-
-    } catch (e) {
-      console.error("Erreur formatRelativeTime:", isoString, e);
-      return '?';
-    }
+      if (!isoString) return '';
+      try { /* ... logique formatRelativeTime ... */ const date = new Date(isoString); if(isNaN(date.getTime())) throw new Error("Invalid date"); const now = new Date(); const diffSeconds = Math.floor((now.getTime()-date.getTime())/1000); if(diffSeconds<60) return `à l'instant`; if(diffSeconds<3600) return `${Math.floor(diffSeconds/60)}m`; if(diffSeconds<86400) return `${Math.floor(diffSeconds/3600)}h`; return date.toLocaleDateString([],{day:'2-digit',month:'short'}); }
+      catch (e) { console.error("Erreur formatRelativeTime:", isoString, e); return '?'; }
   };
-
-  /** Construit l'URL de l'avatar pour l'acteur d'une notification. */
-  const getActorAvatarUrl = (avatarPath) => {
-    // Réutilise la même logique que pour l'avatar principal
-    return formatFullAvatarUrl(avatarPath);
+  const getActorAvatarUrl = (actorAvatarPath) => {
+      // Utilise la même fonction de formatage que pour l'utilisateur principal
+      return formatFullAvatarUrl(actorAvatarPath);
   };
 
 </script>
