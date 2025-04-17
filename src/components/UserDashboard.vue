@@ -217,7 +217,7 @@ const fetchDashboardData = async () => {
     console.log("Fetching dashboard data from API...");
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/dashboard`, { 
+        const response = await fetch(`${API_BASE_URL}/auth/dashboard`, { 
             method: 'GET',
             headers: getAuthHeaders(), // Ajoute le token
         });

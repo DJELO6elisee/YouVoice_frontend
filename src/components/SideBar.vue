@@ -242,7 +242,7 @@
       }
 
       // Construire l'URL de l'API /me
-      const url = `${API_BASE_URL}/api/auth/me`; // Assurez-vous que le préfixe /api est correct
+      const url = `${API_BASE_URL}/auth/me`; // Assurez-vous que le préfixe /api est correct
       console.log(`[Sidebar] Fetching user profile from ${url}`);
 
       try {
