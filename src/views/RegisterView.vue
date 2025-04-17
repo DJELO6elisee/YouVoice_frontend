@@ -82,7 +82,7 @@
   const errorMessage = ref('');
   const successMessage = ref('');
   
-  const API_BASE_URL = 'https://youvoiceapi-production.up.railway.app/api'; // <-- IMPORTANT: Vérifiez cette URL
+  const API_BASE_URL = 'https://youvoiceapi-production.up.railway.app/api';
   
   const handleRegister = async () => {
     errorMessage.value = '';
@@ -114,10 +114,9 @@
       successMessage.value = 'Inscription réussie ! Vous pouvez maintenant vous connecter.';
       
       setTimeout(() => {
-        // Utiliser le nom de la route si vous le préférez
-        router.push({ name: 'Login' }); // Assurez-vous d'avoir une route nommée 'Login'
+        router.push({ name: 'Login' });
       }, 2000); 
-  
+
     } catch (error) {
       console.error('Registration error:', error.response || error);
       if (error.response && error.response.data && error.response.data.message) {

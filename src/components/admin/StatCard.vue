@@ -23,9 +23,8 @@ const props = defineProps({
   title: { type: String, required: true },
   value: { type: [Number, String], required: true },
   icon: { type: String, default: 'fas fa-info-circle' },
-  // La prop 'colorClass' reçoit maintenant un nom simple comme 'blue', 'green', 'yellow', 'warning', etc.
-  // ou reste une classe text-color si c'est plus simple pour vous de la passer depuis le parent.
-  // Ici, on suppose qu'on passe juste 'blue', 'green', 'yellow', etc.
+
+
   colorName: { type: String, default: 'blue' }
 });
 
@@ -66,6 +65,8 @@ const iconColorClass = computed(() => {
 });
 
 </script>
+
+
 <style scoped>
 /* Conteneur principal de la carte */
 .stat-card {

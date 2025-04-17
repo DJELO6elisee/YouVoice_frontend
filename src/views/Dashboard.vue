@@ -179,9 +179,9 @@ onUnmounted(() => {
 /* --- AJOUT: Styles pour le bouton Menu Mobile --- */
 .menu-toggle-button {
   position: fixed; /* Fixé par rapport à la fenêtre */
-  top: 15px; /* Ajuste la position verticale */
+  top: 9px; /* Ajuste la position verticale */
   left: 0; /* Ajuste la position horizontale */
-  z-index: 900; /* Au-dessus de la sidebar et de l'overlay */
+  z-index: 600; /* Au-dessus de la sidebar et de l'overlay */
   background-color: rgba(255, 255, 255, 0.9); /* Fond légèrement transparent */
   border: 1px solid #ccc;
   border-radius: 50%;
@@ -208,11 +208,11 @@ onUnmounted(() => {
 /* --- FIN AJOUT STYLES MOBILE --- */
 
 @media (min-width: 640px) {
-  .content-area { padding: 25px; padding-bottom: 50px; } /* Moins de padding bas sur desktop */
+  .content-area { padding: 10px; padding-bottom: 50px; } /* Moins de padding bas sur desktop */
 }
 
 @media (max-width: 864px) { /* sm: */
-  .content-area { padding: 25px; padding-bottom: 70px; } /* Moins de padding bas sur desktop */
+  .content-area { padding: 10px; padding-bottom: 70px; } /* Moins de padding bas sur desktop */
 }
 
 /* --- Ajustements pour le layout avec sidebar fixe sur desktop --- */

@@ -51,7 +51,7 @@
        </div>
   
     </div>
-  </template>
+</template>
   
 <script setup>
   import { ref, onMounted, reactive, watch } from 'vue'; // Ajout de reactive et watch
@@ -73,16 +73,14 @@
   
   // --- URL API ---
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app/api';
-  // URL base Admin (adaptez si vos routes admin sont sous /api/admin)
-  const API_ADMIN_BASE_URL = `${API_BASE_URL}/admin`; // Supposant un montage dédié
+  const API_ADMIN_BASE_URL = `${API_BASE_URL}/admin`;
   
   // --- Fonction Fetch API ---
   const fetchReports = async () => {
-      // Ne pas reset error ici si loading est juste pour le rafraichissement
-      // On peut le faire seulement si ce n'est pas un re-fetch après action
-      if (!resolving.value) { // N'affiche le loader principal que si ce n'est pas une résolution
+      
+      if (!resolving.value) {
            loading.value = true;
-           error.value = ''; // Reset error seulement au chargement initial/filtre/page
+           error.value = '';
       }
       const token = getAdminAuthToken();
   
@@ -287,7 +285,7 @@
 </script>
   
 
-  <style scoped>
+<style scoped>
   /* Styles généraux pour la page */
   .page-title {
     font-size: 1.875rem; line-height: 2.25rem; font-weight: 600;
@@ -360,4 +358,4 @@
   
   /* La liste elle-même est gérée par le composant ReportList */
   
-  </style>
+</style>

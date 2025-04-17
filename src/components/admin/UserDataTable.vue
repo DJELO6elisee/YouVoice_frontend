@@ -54,7 +54,8 @@
     </table>
   </div>
 </template>
-  
+
+
 <script setup>
   defineProps({
     users: { type: Array, default: () => [] }
@@ -78,8 +79,9 @@
           return new Date(isoString).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
       } catch (e) { return 'Date invalide'; }
   };
-  </script>
-  
+</script>
+
+
 <style scoped>
   /* Conteneur principal de la table */
   .user-data-table {
@@ -250,3 +252,6 @@
   }
   
 </style>
+
+
+

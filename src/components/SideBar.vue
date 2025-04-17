@@ -31,14 +31,14 @@
                 <span class="icon"><i class="fa-solid fa-house"></i></span>
                 Accueil
             </router-link>
-            <router-link to="/tableau-de-bord" class="nav-item" active-class="active" @click="closeSidebar">
+            <router-link to="/userdash" class="nav-item" active-class="active" @click="closeSidebar">
                  <span class="icon"><i class="fa-solid fa-table-columns"></i></span>
                  Tableau de Bord
             </router-link>
-            <router-link to="/historique" class="nav-item" active-class="active" @click="closeSidebar">
-                 <span class="icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
-                 Historique
-            </router-link>
+            <!--<router-link to="/chat" class="nav-item" active-class="active" @click="closeSidebar">
+                 <span class="icon"><i class="fa-solid fa-comment-dots"></i></span>
+                 Conversation
+            </router-link> -->
         </nav>
   
         <div class="separator"></div>
@@ -131,49 +131,72 @@
 <script setup>
   import { useRouter } from 'vue-router';
   import { ref, onMounted, computed, defineEmits, defineExpose } from 'vue';
-  
+
   const emit = defineEmits(['show-recorder']);
   const router = useRouter();
-  
-  // --- URLs de l'API ---
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app/api';
-  const apiUrlBase = import.meta.env.VITE_API_URL_BASE || 'https://youvoiceapi-production.up.railway.app';
-  
+
+  // --- URLs de l'API (Standardisé) ---
+  // Utilise la variable d'environnement VITE_API_BASE_URL si définie, sinon http://localhost:5000
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app';
+  // URL pour les API (si votre /api est préfixé dans server.js, sinon ajoutez /api ici)
+  const API_ENDPOINT_BASE = `${API_BASE_URL}`; // Ou `${API_BASE_URL}/api` si nécessaire
+
   // --- État Sidebar ---
   const isSidebarOpen = ref(false);
-  
+
   // --- Infos Utilisateur ---
   const userName = ref('');
   const userEmail = ref('');
-  const userAvatarPath = ref('');
+  const userAvatarPath = ref(''); // Stocke le chemin relatif ou l'URL complète de l'API
   const isLoadingProfile = ref(true);
   const profileError = ref('');
-  
+
   // --- État pour les Notifications ---
   const isNotificationsPopoverVisible = ref(false);
-  const notifications = ref([]); // Stocke toutes les notifs récentes (lues et non lues)
+  const notifications = ref([]);
   const isLoadingNotifications = ref(false);
   const notificationsError = ref('');
-  
-  // --- Propriété Calculée Avatar Utilisateur ---
-  const userAvatarUrl = computed(() => {
-    const placeholder = 'https://via.placeholder.com/40?text=?';
-    const avatarPath = userAvatarPath.value;
+
+  // --- FONCTIONS HELPER ---
+
+  /** Récupère le token d'authentification depuis le localStorage. */
+  const getAuthToken = () => localStorage.getItem('authToken');
+
+  /**
+   * Construit l'URL complète d'un avatar.
+   * @param {string | null | undefined} avatarPath - Chemin relatif ou URL complète.
+   * @returns {string} URL complète ou placeholder.
+   */
+  const formatFullAvatarUrl = (avatarPath) => {
+    const placeholder = 'https://via.placeholder.com/40?text=?'; // Placeholder générique
     if (!avatarPath) { return placeholder; }
+    // Si c'est déjà une URL complète
     if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) { return avatarPath; }
-    if (!apiUrlBase) { console.warn("[Sidebar Avatar] apiUrlBase n'est pas défini."); return placeholder; }
-    try { return new URL(avatarPath, apiUrlBase).href; }
-    catch (e) { console.error(`[Sidebar Avatar] Erreur construction URL:`, e); return placeholder; }
+    // Si l'URL de base n'est pas définie
+    if (!API_BASE_URL) { console.warn("[Avatar URL] API_BASE_URL n'est pas défini."); return placeholder; }
+    // Construire l'URL complète
+    try {
+      // Assurer qu'il n'y a pas de double slash si avatarPath commence par /
+      const pathPrefix = avatarPath.startsWith('/') ? '' : '/';
+      return `${API_BASE_URL}${pathPrefix}${avatarPath}`;
+    } catch (e) {
+      console.error(`[Avatar URL] Erreur construction URL pour ${avatarPath}:`, e);
+      return placeholder;
+    }
+  };
+
+  // --- Propriété Calculée Avatar Utilisateur ---
+  // Utilise la fonction helper pour construire l'URL
+  const userAvatarUrl = computed(() => {
+    return formatFullAvatarUrl(userAvatarPath.value);
   });
-  
-  // --- Compteur pour le Badge (basé sur l'état 'read') ---
+
+  // --- Compteur pour le Badge Notifications ---
   const unreadNotificationCount = computed(() => {
       return notifications.value.filter(n => !n.read).length;
   });
-  
-  // --- FONCTIONS HELPER ---
-  const getAuthToken = () => localStorage.getItem('authToken');
-  
+
+
   // --- Fonctions Sidebar ---
   const openSidebar = () => {
       isSidebarOpen.value = true;
@@ -181,177 +204,258 @@
   };
   const closeSidebar = () => {
       isSidebarOpen.value = false;
-      isNotificationsPopoverVisible.value = false; // Ferme aussi le popover notifs
+      isNotificationsPopoverVisible.value = false; // Ferme aussi le popover
       document.body.classList.remove('sidebar-open-no-scroll');
   };
   const toggleSidebar = () => {
       if (isSidebarOpen.value) { closeSidebar(); } else { openSidebar(); }
   };
-  
-  // --- Expose ---
+
+  // --- Expose (pour contrôle parent éventuel) ---
   defineExpose({ openSidebar, closeSidebar, toggleSidebar });
-  
+
   // --- Déconnexion ---
   const handleLogoutAndClose = () => { handleLogout(); closeSidebar(); };
   const handleLogout = () => {
-      console.log('Déconnexion initiée...');
-      localStorage.removeItem('authToken'); localStorage.removeItem('userId');
-      userName.value = ''; userEmail.value = ''; userAvatarPath.value = ''; profileError.value = '';
-      console.log('Token et infos utilisateur supprimés.');
+      console.log('[Sidebar] Déconnexion initiée...');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userId'); // Si vous stockez aussi l'ID
+      // Réinitialiser l'état local
+      userName.value = '';
+      userEmail.value = '';
+      userAvatarPath.value = '';
+      profileError.value = '';
+      notifications.value = [];
+      console.log('[Sidebar] Token et infos utilisateur supprimés.');
+      // Rediriger vers la page de connexion (utiliser replace pour ne pas avoir d'historique)
       router.replace({ name: 'Login' });
   };
-  
+
   // --- Profil Utilisateur ---
   const fetchUserProfile = async () => {
-      isLoadingProfile.value = true; profileError.value = ''; const token = getAuthToken();
-      if (!token) { profileError.value = 'Non connecté.'; isLoadingProfile.value = false; return; }
+      isLoadingProfile.value = true;
+      profileError.value = '';
+      const token = getAuthToken();
+      if (!token) {
+          profileError.value = 'Non connecté.';
+          isLoadingProfile.value = false;
+          return;
+      }
+
+      // Construire l'URL de l'API /me
+      const url = `${API_ENDPOINT_BASE}/api/auth/me`; // Assurez-vous que le préfixe /api est correct
+      console.log(`[Sidebar] Fetching user profile from ${url}`);
+
       try {
-          const response = await fetch(`${apiBaseUrl}/auth/me`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }, });
-          const responseBodyText = await response.text();
+          const response = await fetch(url, {
+              headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Accept': 'application/json'
+              },
+          });
+
+          const responseBodyText = await response.text(); // Lire le corps pour le parsing manuel
+
           if (!response.ok) {
               let errorMsg = `Erreur ${response.status}`;
-              if (response.status === 401) { errorMsg = "Session expirée/invalide."; }
-              else { try { const errData = JSON.parse(responseBodyText); errorMsg = errData.message || `Erreur serveur (${response.status})`; } catch (e) { errorMsg = `Erreur serveur (${response.status}) - Réponse inattendue.`; } }
+              if (response.status === 401) {
+                  errorMsg = "Session expirée ou invalide.";
+                  // Peut-être déclencher la déconnexion ici ?
+                  // handleLogout();
+              } else {
+                  try {
+                      const errData = JSON.parse(responseBodyText);
+                      errorMsg = errData.message || `Erreur serveur (${response.status})`;
+                  } catch (e) {
+                      errorMsg = `Erreur serveur (${response.status}) - Réponse inattendue: ${responseBodyText.substring(0, 100)}`;
+                  }
+              }
               throw new Error(errorMsg);
           }
+
+          // Essayer de parser le JSON
           const result = JSON.parse(responseBodyText);
+
+          // Vérifier la structure attendue de la réponse
           if (result.status === 'success' && result.data?.user) {
               const user = result.data.user;
-              userName.value = user.username || ''; userEmail.value = user.email || ''; userAvatarPath.value = user.avatar || '';
-          } else { throw new Error('Réponse API profil invalide.'); }
+              userName.value = user.username || '';
+              userEmail.value = user.email || '';
+              userAvatarPath.value = user.avatar || ''; // Stocke le chemin tel quel
+              console.log("[Sidebar] User profile loaded:", { username: user.username, avatarPath: user.avatar });
+          } else {
+              throw new Error(`Réponse API profil invalide: ${JSON.stringify(result)}`);
+          }
       } catch (error) {
-          console.error('Erreur profil (Sidebar):', error);
-          if (!profileError.value) { profileError.value = error.message || 'Impossible de charger le profil.'; }
-      } finally { isLoadingProfile.value = false; }
+          console.error('[Sidebar] Erreur fetchUserProfile:', error);
+          // Afficher l'erreur uniquement si elle n'a pas déjà été définie (ex: par 401)
+          if (!profileError.value) {
+              profileError.value = error.message || 'Impossible de charger le profil.';
+          }
+      } finally {
+          isLoadingProfile.value = false;
+      }
   };
-  
+
   // --- Hook Cycle de Vie ---
-  onMounted(() => { fetchUserProfile(); });
-  
-  // --- Show Recorder ---
+  onMounted(() => {
+      fetchUserProfile(); // Charger le profil au montage
+      // Optionnel: Charger les notifications initiales si nécessaire au démarrage
+      // fetchNotifications();
+  });
+
+  // --- Émission pour Afficher l'Enregistreur Vocal ---
   const requestShowRecorderAndClose = () => { requestShowRecorder(); closeSidebar(); };
   const requestShowRecorder = () => { emit('show-recorder'); };
-  
-  
+
+
   // --- Fonctions pour les Notifications ---
-  
+
+  /** Affiche/cache le popover des notifications et charge les données si ouvert. */
   const toggleNotificationsPopover = async () => {
       if (!isNotificationsPopoverVisible.value) {
           isNotificationsPopoverVisible.value = true;
-          await fetchNotifications(); // Recharge à chaque ouverture
+          await fetchNotifications(); // Recharge les notifications à chaque ouverture
       } else {
           isNotificationsPopoverVisible.value = false;
       }
+      // Empêcher la fermeture de la sidebar si on clique sur le bouton notif
+      // event.stopPropagation(); // Peut être géré différemment selon la structure HTML
   };
-  
-  // Récupère TOUTES les notifications récentes (lues/non lues)
+
+  /** Récupère les notifications récentes depuis l'API. */
   const fetchNotifications = async () => {
-      if (isLoadingNotifications.value) return;
-      isLoadingNotifications.value = true; notificationsError.value = '';
+      if (isLoadingNotifications.value) return; // Empêche les appels multiples
+      isLoadingNotifications.value = true;
+      notificationsError.value = '';
       const token = getAuthToken();
       if (!token) { notificationsError.value = "Non connecté."; isLoadingNotifications.value = false; return; }
-  
-      // Appelle l'endpoint SANS ?status=unread pour tout récupérer
-      const url = `${apiBaseUrl}/notifications`;
-      console.log(`[Notifications] Fetching ALL recent from ${url}`);
+
+      // URL pour récupérer les notifications (supposons que l'API renvoie les plus récentes, lues ou non)
+      const url = `${API_ENDPOINT_BASE}/api/notifications`; // Ajustez l'URL si nécessaire
+      console.log(`[Notifications] Fetching from ${url}`);
       try {
-          const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } });
-          if (!response.ok) { throw new Error(`Erreur ${response.status}`); }
+          const response = await fetch(url, {
+              headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+          });
+          if (!response.ok) { throw new Error(`Erreur ${response.status} lors de la récupération des notifications.`); }
           const result = await response.json();
+          // Vérifier la structure de la réponse
           if (result.status === 'success' && Array.isArray(result.data?.notifications)) {
-              // Remplace la liste avec les données fraîches (lues et non lues)
               notifications.value = result.data.notifications;
-              console.log(`[Notifications] Loaded ${notifications.value.length} total recent notifications.`);
-          } else { throw new Error("Format de réponse API invalide."); }
+              console.log(`[Notifications] Loaded ${notifications.value.length} notifications.`);
+          } else {
+              throw new Error("Format de réponse API invalide pour les notifications.");
+          }
       } catch (error) {
           console.error('[Notifications] Error fetching:', error);
           notificationsError.value = error.message || "Impossible de charger les notifications.";
-      } finally { isLoadingNotifications.value = false; }
+          notifications.value = []; // Vider en cas d'erreur
+      } finally {
+          isLoadingNotifications.value = false;
+      }
   };
-  
-  // Marque TOUTES comme lues (côté serveur et met à jour l'état local)
+
+  /** Marque toutes les notifications non lues comme lues via l'API. */
   const markAllNotificationsAsRead = async () => {
       const token = getAuthToken();
       if (!token) { alert("Veuillez vous reconnecter."); return; }
-  
+
+      // Vérifier s'il y a des notifications non lues à marquer
       const unreadNotificationsExist = notifications.value.some(n => !n.read);
       if (!unreadNotificationsExist) {
-           console.log("[Notifications] No unread notifications to mark.");
-           return; // Rien à faire
+           console.log("[Notifications] Aucune notification non lue à marquer.");
+           return;
       }
-  
-      console.log("[Notifications] Marking all as read...");
-      const url = `${apiBaseUrl}/notifications/mark-all-read`;
+
+      console.log("[Notifications] Marquage de toutes les notifications comme lues...");
+      // URL pour marquer toutes comme lues
+      const url = `${API_ENDPOINT_BASE}/api/notifications/mark-all-read`;
       try {
-          const response = await fetch(url, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } });
-          if (!response.ok) { throw new Error(`Erreur ${response.status}`); }
-  
-          // --- Mise à jour locale après succès API ---
-          notifications.value.forEach(notification => {
-              notification.read = true; // Marque toutes comme lues dans le tableau local
+          const response = await fetch(url, {
+              method: 'POST', // Ou PATCH selon votre API
+              headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
           });
-          console.log("[Notifications] Marked all as read locally and successfully on backend.");
-          // On ne ferme PAS le popover
-  
+          if (!response.ok) { throw new Error(`Erreur ${response.status} lors du marquage.`); }
+
+          // Si succès API, mettre à jour l'état local
+          notifications.value.forEach(notification => {
+              notification.read = true; // Marquer comme lu localement
+          });
+          console.log("[Notifications] Toutes les notifications marquées comme lues (localement et backend).");
+
       } catch (error) {
-          console.error('[Notifications] Error marking all as read:', error);
+          console.error('[Notifications] Erreur markAllNotificationsAsRead:', error);
           notificationsError.value = error.message || "Erreur lors de la mise à jour.";
           // Ne pas modifier l'état local si l'API échoue
       }
   };
-  
-  // Marque UNE notification comme lue (au clic)
+
+  /**
+   * Marque une notification spécifique comme lue (au clic).
+   * Fait une mise à jour optimiste de l'UI.
+   * @param {object} notification - La notification à marquer.
+   */
   const markOneAsRead = async (notification) => {
+      // Ne rien faire si déjà lue ou en cours de chargement général
       if (notification.read || isLoadingNotifications.value) return;
-  
-      console.log(`[Notifications] Marking notification ${notification.id} as read...`);
+
+      console.log(`[Notifications] Marquage de la notification ${notification.id} comme lue...`);
       const token = getAuthToken();
       if (!token) return;
-  
-      const originalReadStatus = notification.read; // false
-      notification.read = true; // Mise à jour optimiste
-  
-      const url = `${apiBaseUrl}/notifications/${notification.id}/read`;
+
+      const originalReadStatus = notification.read; // Sauvegarder l'état initial (qui est false ici)
+      notification.read = true; // <-- MISE À JOUR OPTIMISTE : Marquer comme lu dans l'UI immédiatement
+
+      // URL pour marquer une notification spécifique comme lue
+      const url = `${API_ENDPOINT_BASE}/api/notifications/${notification.id}/read`;
       try {
           const response = await fetch(url, {
-              method: 'PATCH',
+              method: 'PATCH', // Ou POST selon votre API
               headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
           });
           if (!response.ok) {
-              notification.read = originalReadStatus; // Annuler si échec
-              throw new Error(`Erreur ${response.status}`);
+              notification.read = originalReadStatus; // <-- ROLLBACK : Annuler la mise à jour UI si l'API échoue
+              throw new Error(`Erreur ${response.status} lors du marquage de la notification ${notification.id}.`);
           }
-          console.log(`[Notifications] Successfully marked ${notification.id} as read on backend.`);
+          console.log(`[Notifications] Notification ${notification.id} marquée comme lue avec succès (backend).`);
+          // La mise à jour UI est déjà faite (optimiste)
       } catch (error) {
-          notification.read = originalReadStatus; // Annuler si échec
-          console.error(`[Notifications] Error marking ${notification.id} as read:`, error);
-          notificationsError.value = `Erreur MàJ notif`; // Erreur discrète
+          notification.read = originalReadStatus; // <-- ROLLBACK : Annuler aussi en cas d'erreur catch
+          console.error(`[Notifications] Erreur markOneAsRead (${notification.id}):`, error);
+          notificationsError.value = `Erreur MàJ notif`; // Afficher une erreur discrète
       }
   };
-  
-  
-  // Helper pour formater le temps (exemple)
+
+
+  /** Formate une date ISO en temps relatif (ex: 5m, 2h, 3j). */
   const formatRelativeTime = (isoString) => {
     if (!isoString) return '';
     try {
-      const date = new Date(isoString); const now = new Date();
-      const diff = Math.floor((now - date) / 1000);
-      if (diff < 60) return `${diff}s`;
-      if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-      if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-      return `${Math.floor(diff / 86400)}j`;
-    } catch (e) { return '?'; }
+      const date = new Date(isoString);
+      if (isNaN(date.getTime())) throw new Error("Invalid date");
+      const now = new Date();
+      const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+      if (diffSeconds < 60) return `à l'instant`; // Moins d'une minute
+      if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m`; // Minutes
+      if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h`; // Heures
+      // Si plus d'un jour, on peut afficher la date courte
+      return date.toLocaleDateString([], { day: '2-digit', month: 'short' });
+      // Ou continuer avec les jours: return `${Math.floor(diffSeconds / 86400)}j`;
+
+    } catch (e) {
+      console.error("Erreur formatRelativeTime:", isoString, e);
+      return '?';
+    }
   };
-  
-  // Helper pour avatar acteur (exemple)
+
+  /** Construit l'URL de l'avatar pour l'acteur d'une notification. */
   const getActorAvatarUrl = (avatarPath) => {
-    const placeholder = 'https://via.placeholder.com/30?text=?';
-    if (!avatarPath) return placeholder;
-    if (avatarPath.startsWith('http')) return avatarPath;
-    if (!apiUrlBase) return placeholder;
-    try { return new URL(avatarPath, apiUrlBase).href; } catch (e) { return placeholder; }
+    // Réutilise la même logique que pour l'avatar principal
+    return formatFullAvatarUrl(avatarPath);
   };
-  
+
 </script>
   
   

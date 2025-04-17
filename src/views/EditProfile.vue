@@ -129,31 +129,31 @@ const error = ref(null);
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://youvoiceapi-production.up.railway.app/api';
 const apiUrlBase = import.meta.env.VITE_API_URL_BASE || 'https://youvoiceapi-production.up.railway.app';
 
-// --- MODIFICATION: Utiliser editableData comme source principale pour le formulaire ---
+// Utiliser editableData comme source principale pour le formulaire ---
 // Initialiser avec des valeurs null ou vides
 const editableData = reactive({
   id: null, // Garder l'ID pour l'appel API de sauvegarde
   username: '', // Non modifiable, mais affiché
   fullName: '',
-  genre: null, // Utiliser null pour correspondre à l'option 'Préfère ne pas dire' ou valeur initiale vide
+  genre: null, 
   pays: '',
   email: '',
   bio: '',
-  avatarFile: null, // Pour le nouveau fichier uploadé
+  avatarFile: null,
 });
 
 // --- AJOUT: Stocker l'URL de l'avatar original et l'URL de prévisualisation ---
-const originalAvatarUrl = ref(null); // URL de l'avatar venant de l'API
-const avatarPreviewUrl = ref(null); // URL pour l'aperçu (Data URL si nouveau fichier)
-const avatarInput = ref(null); // Ref pour l'input fichier caché
-const avatarFileName = ref(''); // Nom du fichier sélectionné
+const originalAvatarUrl = ref(null);
+const avatarPreviewUrl = ref(null); 
+const avatarInput = ref(null);
+const avatarFileName = ref('');
 
-// --- AJOUT: Fonction pour récupérer le token ---
+// Fonction pour récupérer le token ---
 const getToken = () => {
 return localStorage.getItem('authToken');
 };
 
-// --- AJOUT: Fonction pour récupérer les données utilisateur ---
+// Fonction pour récupérer les données utilisateur ---
 const fetchCurrentUserForEdit = async () => {
   isLoading.value = true;
   error.value = null;
@@ -161,7 +161,7 @@ const fetchCurrentUserForEdit = async () => {
 
   if (!token) {
       error.value = "Non authentifié. Redirection vers la connexion...";
-      setTimeout(() => router.push('/login'), 1500); // Laisser le temps de lire le message
+      setTimeout(() => router.push('/login'), 1500);
       isLoading.value = false;
       return;
   }
@@ -256,8 +256,6 @@ const handleAvatarChange = (event) => {
   }
 };
 
-// --- MODIFICATION: Logique de sauvegarde (placeholder pour l'instant) ---
-// --- Dans <script setup> de EditProfile.vue ---
 
 // AJOUT: État pour indiquer si une sauvegarde est en cours
 const isSaving = ref(false);

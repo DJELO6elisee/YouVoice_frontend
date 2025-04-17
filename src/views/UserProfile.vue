@@ -18,7 +18,7 @@
         </div>
       </div>
     </div>
-  </template>
+</template>
   
   <script setup>
   import { ref, onMounted, onUnmounted, computed } from 'vue';
@@ -26,13 +26,11 @@
   import TopBar from '@/components/HeaderBar.vue';
   import SideBar from '@/components/SideBar.vue';
   
-  // ICI : Import du composant UserProfile
   import Profile from '@/components/Profile.vue'; // Assurez-vous que le chemin est correct!
   
-  // Vous n'avez peut-être plus besoin de ces données utilisateur ici si UserProfile les gère
   const user = ref({
-    name: 'YOUVOICE', // Exemple
-    avatarUrl: 'https://via.placeholder.com/40' // Exemple
+    name: 'YOUVOICE', 
+    avatarUrl: 'https://via.placeholder.com/40' 
   });
   
   // --- État et logique pour la vue mobile ---

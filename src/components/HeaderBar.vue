@@ -6,6 +6,13 @@
       <!-- <p class="date">{{ currentDate }}</p> -->
     </div>
     <div class="navbar-right">
+      <router-link to="/dashboard" active-class="active">
+        <button class="icon-button notifications" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </button>
+      </router-link>
+      
+
       <div class="search-bar">
         <i class="fa-solid fa-magnifying-glass search-icon"></i>
         <input
@@ -15,28 +22,18 @@
            @input="handleSearch"
         />
       </div>
-      <button class="icon-button notifications" aria-label="Notifications">
-        <i class="fa-regular fa-bell"></i>
-        <!-- <span class="notification-badge">3</span> -->
-      </button>
-      <button class="icon-button user-profile-nav" aria-label="User Profile">
-         <!-- Optionnel: Afficher indicateur pendant chargement -->
-         <span v-if="isLoading" class="navbar-avatar-loading"></span>
-         <!-- Optionnel: Afficher icône erreur -->
-         <i v-else-if="error" class="fa-solid fa-circle-exclamation navbar-avatar-error" :title="error"></i>
-         <!-- Afficher l'avatar si chargé et sans erreur -->
-         <img v-else
-              :src="userAvatarUrl"
-              alt="User Avatar"
-              class="navbar-avatar" />
-      </button>
+      
+      
     </div>
   </header>
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router';
+
 import { ref, computed, onMounted, defineEmits  } from 'vue'; // Ajout de onMounted
 const emit = defineEmits(['search']); // Déclare que ce composant peut émettre un événement 'search'
+const router = useRouter();
 
 
 // --- NOUVEAU: State local pour les infos utilisateur ---
@@ -203,7 +200,7 @@ const handleSearch = (event) => {
 
 .icon-button {
   background: none;
-  border: 1px solid #d1d5db; /* Bordure comme search */
+  border: 1px solid #dce0e6; /* Bordure comme search */
   border-radius: 50%; /* Boutons ronds */
   width: 40px;
   height: 40px;
@@ -220,7 +217,7 @@ const handleSearch = (event) => {
   color: #374151;
 }
 .icon-button i {
-    font-size: 1.1em;
+  font-size: 1.1em;
 }
 
 /* Style spécifique pour l'avatar */
@@ -235,60 +232,55 @@ const handleSearch = (event) => {
   border-radius: 50%;
 }
 
-/* Style pour un badge de notification (exemple) */
-.notification-badge {
-    position: absolute;
-    top: -3px;
-    right: -3px;
-    background-color: red;
-    color: white;
-    border-radius: 50%;
-    font-size: 0.7em;
-    width: 16px;
-    height: 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-}
 
 /* --- Styles pour Écrans Moyens et Larges (ex: 768px+) --- */
 @media (max-width: 768px) { /* md: breakpoint */
   .app-navbar {
-    padding: 15px 30px; /* Padding original */
+    padding: 10px 25px; /* Padding original */
   }
 
   .navbar-left h1 {
-    font-size: 1.1em; /* Taille originale */
-    margin-left: 8px;
+    font-size: 1em; /* Taille originale */
+    margin-left: 20px;
 
   }
 
   .navbar-right {
     gap: 15px; /* Espace original */
-    margin-left: 11px;
+    margin-left: 8px;
 
   }
 
   /* Afficher la barre de recherche */
   .search-bar {
-    display: block; /* AFFICHER */
+    display: flex; /* AFFICHER */
+    margin-left: 10px;
 
   }
    .search-bar input {
-       min-width: 150px; /* Largeur originale */
-       font-size: 1em; /* Taille texte originale */
+    min-width: 100px; /* Largeur originale */
+    font-size: 0.6em; /* Taille texte originale */
    }
 
+  .search-bar .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af; /* Couleur de l'icône */
+    font-size: 0.7em;
+  }
 
   /* Augmenter taille boutons icônes */
   .icon-button {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
     border: 1px solid #d1d5db; /* Remettre bordure */
+    margin-left: 20px;
+
   }
    .icon-button i {
-       font-size: 1.1em; /* Taille icône originale */
+      font-size: 1.1em; /* Taille icône originale */
    }
 
    .notification-badge {

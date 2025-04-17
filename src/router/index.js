@@ -6,8 +6,10 @@ import LoginView from '../views/LoginView.vue';
 const DashboardView = () => import('../views/Dashboard.vue');
 const UserProfile = () => import('../views/UserProfile.vue');
 import EditProfile from '../views/EditProfile.vue';
+import UserDashboard from '../components/UserDashboard.vue';
+const ChatView = () => import('../views/ChatView.vue'); // Assurez-vous que le chemin est correct
 
-// --- Vues et Layout Admin ---  <---- AJOUT
+// --- Vues et Layout Admin ---
 import AdminLayout from '../layouts/AdminLayout.vue'; // Assurez-vous que le chemin est correct
 import AdminDashboard from '../views/admin/AdminDashboard.vue';
 import AdminUsers from '../views/admin/AdminUsers.vue';
@@ -15,7 +17,7 @@ import AdminReports from '../views/admin/AdminReports.vue';
 // Optionnel : Page de connexion admin séparée
 // import AdminLogin from '../views/AdminLogin.vue';
 
-        
+
 // --- Fonctions de Vérification d'Authentification ---
 
 // Vérification pour utilisateur normal (existante)
@@ -41,7 +43,6 @@ const routes = [
     path: '/',
     redirect: () => {
       // Redirige vers Dashboard si user normal connecté, sinon Login
-      // Si vous voulez une logique différente pour admin connecté, ajoutez-la ici
       return isUserAuthenticated() ? { name: 'Dashboard' } : { name: 'Login' };
     }
   },
@@ -51,7 +52,7 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: RegisterView
-    // meta: { guestOnly: true } // Si vous voulez empêcher les connectés d'y aller
+    // meta: { guestOnly: true }
   },
   {
     path: '/login',
@@ -63,43 +64,50 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardView,
-    meta: { requiresAuth: true } // Nécessite authentification utilisateur normal
+    meta: { requiresAuth: true }
   },
   {
     path: '/profil',
     name: 'UserProfile',
     component: UserProfile,
-    meta: { requiresAuth: true } // Nécessite authentification utilisateur normal
+    meta: { requiresAuth: true }
   },
   {
     path: '/edit-profile',
     name: 'EditProfile',
     component: EditProfile,
-    meta: { requiresAuth: true } // Probablement aussi protégé
+    meta: { requiresAuth: true }
   },
 
-  // --- Route Connexion Admin (Optionnelle) --- <---- AJOUT
+  {
+    path: '/chat',
+    name: 'Chat',
+    component: ChatView,
+    meta: { requiresAuth: true } 
+  },
+  {
+    path: '/userdash',
+    name: 'UserDash',
+    component: UserDashboard,
+    meta: { requiresAuth: true } 
+  },
+  // --- Route Connexion Admin (Optionnelle) ---
   // {
   //   path: '/admin/login',
   //   name: 'AdminLogin',
-  //   component: AdminLogin // Assurez-vous d'importer AdminLogin
+  //   component: AdminLogin
   // },
 
-  // --- Routes Admin Protégées --- <---- AJOUT
+  // --- Routes Admin Protégées ---
   {
     path: '/admin',
-    component: AdminLayout,           // Utilise le layout admin
-    meta: { requiresAdminAuth: true }, // Marqueur pour la protection ADMIN
+    component: AdminLayout,
+    meta: { requiresAdminAuth: true },
     children: [
-      // Redirection de /admin vers /admin/dashboard
       { path: '', name: 'AdminRootRedirect', redirect: { name: 'AdminDashboard' } },
-      // Tableau de bord Admin
       { path: 'dashboard', name: 'AdminDashboard', component: AdminDashboard },
-      // Gestion Utilisateurs Admin
       { path: 'users', name: 'AdminUsers', component: AdminUsers },
-      // Gestion Signalements Admin
       { path: 'reports', name: 'AdminReports', component: AdminReports },
-      // Ajouter d'autres vues admin ici
     ]
   },
 
@@ -110,10 +118,10 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
+  routes, // Utilise le tableau routes mis à jour
 });
 
-// --- GARDE DE NAVIGATION GLOBALE (Modifiée) ---
+// --- GARDE DE NAVIGATION GLOBALE (Inchangée - gère déjà requiresAuth) ---
 router.beforeEach((to, from, next) => {
   const requiresUser = to.matched.some(record => record.meta.requiresAuth);
   const requiresAdmin = to.matched.some(record => record.meta.requiresAdminAuth);
@@ -127,15 +135,14 @@ router.beforeEach((to, from, next) => {
     if (!isAdminAuth) {
       console.warn("Garde Navigation: Accès Admin requis mais non authentifié.");
       // Rediriger vers la page de connexion ADMIN (si elle existe) ou une page publique
-      next({ name: 'AdminLogin' }); // Assurez-vous que cette route existe
-      // Ou next({ name: 'Login' }); // Ou vers la connexion générale
-      // Ou next({ name: 'Home' }); // Ou vers l'accueil
+       // next({ name: 'AdminLogin' }); // Décommenter si vous avez AdminLogin
+       next({ name: 'Login' }); // Ou rediriger vers la connexion générale
     } else {
       console.log("Garde Navigation: Accès Admin autorisé.");
       next(); // Admin authentifié, accès autorisé
     }
   }
-  // 2. Logique pour les routes Utilisateur Normal (existante, légèrement ajustée)
+  // 2. Logique pour les routes Utilisateur Normal (gère maintenant /chat aussi)
   else if (requiresUser) {
     if (!isUserAuth) {
       console.warn("Garde Navigation: Accès Utilisateur requis mais non authentifié.");
@@ -147,14 +154,8 @@ router.beforeEach((to, from, next) => {
   }
    // 3. Logique optionnelle pour les pages "invité seulement" (Login/Register)
   // else if ((to.name === 'Login' || to.name === 'Register') && isUserAuth) {
-  //   // Si un utilisateur normal est connecté et essaie d'aller sur Login/Register
   //   console.log("Garde Navigation: Utilisateur connecté, redirection depuis Login/Register vers Dashboard.");
   //   next({ name: 'Dashboard' });
-  // }
-  // Si vous avez une connexion admin séparée, vous pourriez aussi interdire l'accès à AdminLogin si déjà admin
-  // else if (to.name === 'AdminLogin' && isAdminAuth) {
-  //    console.log("Garde Navigation: Admin connecté, redirection depuis AdminLogin vers AdminDashboard.");
-  //    next({ name: 'AdminDashboard' });
   // }
   else {
     // Route publique ou cas non géré explicitement

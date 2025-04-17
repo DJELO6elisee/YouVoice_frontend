@@ -1,5 +1,3 @@
-// src/components/VoiceNoteFeed.vue
-// src/components/VoiceNoteFeed.vue ou MainContent.vue
 <template>
   <div class="voice-note-feed">
     <!-- Indicateur de chargement -->
@@ -229,4 +227,15 @@ onMounted(() => {
 }
 
 
+@media (max-width: 768px) { 
+ 
+    .voice-note-feed {
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 10px;
+
+    }
+
+}
 </style>

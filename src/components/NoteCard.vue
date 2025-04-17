@@ -957,11 +957,7 @@ const logShareToBackend = async (platform) => {
     /* --- AJOUTS --- */
     max-width: 800px;
     box-sizing: border-box;
-
-  
   }
-  
-  /* ... le reste de vos styles ... */
   
   .card-header {
     display: flex;
@@ -984,7 +980,7 @@ const logShareToBackend = async (platform) => {
   
   .card-header .name {
     font-weight: bold;
-    font-size: 30px;
+    font-size: 20px;
     color: #000;
   }
   
@@ -1514,6 +1510,23 @@ const logShareToBackend = async (platform) => {
     border-bottom: none; /* Pas de bordure pour le dernier */
 }
 
+
+@media (max-width: 768px) { 
+ 
+    .note-card {
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 8px;
+        color: white;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        position: relative;
+        width: 100%;
+        max-width: 1000px;
+
+        box-sizing: border-box;
+    }
+
+}
 
 </style>
 

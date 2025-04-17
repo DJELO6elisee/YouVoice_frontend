@@ -5,7 +5,7 @@
       <!-- Ajouter Doughnut, Pie, etc. si nécessaire -->
        <p v-else>Type de graphique non supporté: {{ type }}</p>
     </div>
-  </template>
+</template>
   
   <script setup>
   import { Bar, Line } from 'vue-chartjs';
