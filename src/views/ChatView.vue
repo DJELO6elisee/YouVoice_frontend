@@ -930,7 +930,6 @@
     color: #333;
     border: 1px solid #eee;
     border-radius: 18px 18px 5px 18px;
-    margin-left: auto;
   }
 
   .my-message .message-content .timestamp {
@@ -1082,7 +1081,6 @@
    }
    .my-message .message-bubble {
       right: 0;
-      width: 50%;
 
    }
     .other-message .message-bubble {
