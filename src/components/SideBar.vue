@@ -35,10 +35,10 @@
                  <span class="icon"><i class="fa-solid fa-table-columns"></i></span>
                  Tableau de Bord
             </router-link>
-            <!-- <router-link to="/chat" class="nav-item" active-class="active" @click="closeSidebar">
+            <router-link to="/chat" class="nav-item" active-class="active" @click="closeSidebar">
                  <span class="icon"><i class="fa-solid fa-comment-dots"></i></span>
                  Conversation
-            </router-link> -->
+            </router-link>
         </nav>
   
         

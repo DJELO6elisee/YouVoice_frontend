@@ -12,7 +12,6 @@
   <div v-else class="chat-view" :class="theme">
 
     <!-- Sidebar (Liste des Conversations) -->
-    <!-- AJOUT: Classe conditionnelle pour la visibilité sur mobile -->
     <div class="sidebar" :class="{ 'visible': !isMobileView || mobileVisibleSection === 'sidebar' }">
       <div class="sidebar-header">
         <div class="user-info-header">
@@ -429,16 +428,39 @@
        initError.value = "La connexion temps réel n'a pu être établie.";
     }
   };
+  
   const handleSendMessage = () => {
-    // ... (code inchangé)
-    if (!newMessage.value.trim() || !selectedConversation.value?.id || !socket.value?.connected || !currentUser.value || loadingMessages.value) { /* ... error checks ... */ return; }
-    console.log(`[ChatView] Tentative d'envoi message à ${selectedConversation.value.id}`);
-    const messageData = { conversationId: selectedConversation.value.id, content: newMessage.value.trim() };
-    sendSocketMessage(messageData);
-    newMessage.value = '';
-    adjustTextareaHeight();
-    nextTick(() => { messageInputRef.value?.focus(); });
-  };
+  console.log('[handleSendMessage] Fonction appelée!');
+
+  console.log('newMessage:', newMessage.value);
+  console.log('selectedConversation ID:', selectedConversation.value?.id);
+  console.log('Socket connecté ?:', socket.value?.connected);
+  console.log('currentUser chargé ?:', !!currentUser.value);
+  console.log('loadingMessages:', loadingMessages.value);
+
+  if (!newMessage.value.trim() || !selectedConversation.value?.id || !socket.value?.connected || !currentUser.value || loadingMessages.value) {
+    console.warn('[handleSendMessage] Envoi annulé - Condition non remplie.');
+    if (!socket.value?.connected) console.error("CAUSE: Socket non connecté !"); // Cause fréquente
+    // ... autres logs pour identifier la cause exacte si besoin ...
+    return; // La fonction s'arrête ici si une condition échoue
+  }
+
+  console.log(`[ChatView] Tentative d'envoi message à ${selectedConversation.value.id}`);
+  const messageData = { conversationId: selectedConversation.value.id, content: newMessage.value.trim() };
+
+  console.log('[handleSendMessage] Données à envoyer via socket:', messageData);
+  try {
+      sendSocketMessage(messageData);
+      console.log('[handleSendMessage] Appel à sendSocketMessage effectué.');
+
+      newMessage.value = '';
+      adjustTextareaHeight();
+      nextTick(() => { messageInputRef.value?.focus(); });
+  } catch (error) {
+      console.error("[handleSendMessage] Erreur lors de l'appel à sendSocketMessage ou màj UI:", error);
+  }
+};
+
    const handleNewMessage = (message) => {
     // ... (code inchangé - gère la réception et mise à jour état)
         console.log('[ChatView] RAW newMessage received:', JSON.stringify(message, null, 2));
@@ -612,7 +634,7 @@
           // Si on passe en vue mobile
           if (currentlyMobile) {
               // Si une conversation était sélectionnée, on affiche le chat, sinon la liste
-              mobileVisibleSection.value = selectedConversation.value ? 'chat' : 'sidebar';
+              mobileVisibleSection.value = selectedConversation.value ? 'sidebar' : 'sidebar';
               console.log(`[ChatView] Passage en Mobile, vue affichée: ${mobileVisibleSection.value}`);
           }
           // Si on passe en vue desktop, les classes CSS feront le travail, mobileVisibleSection n'est plus prioritaire
