@@ -922,7 +922,7 @@
   /* --- Styles spécifiques pour VOS messages --- */
   .my-message {
     align-self: flex-end; 
-    margin-right: auto; 
+    margin-left: auto; 
   }
 
   .my-message .message-bubble {
@@ -930,6 +930,7 @@
     color: #333;
     border: 1px solid #eee;
     border-radius: 18px 18px 5px 18px;
+    margin-left: auto;
   }
 
   .my-message .message-content .timestamp {
