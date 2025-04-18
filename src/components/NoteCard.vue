@@ -451,7 +451,7 @@ const handleAudioElementError = (e) => {
             case MediaError.MEDIA_ERR_ABORTED: audioError.value = 'Lecture annulée.'; break;
             case MediaError.MEDIA_ERR_NETWORK: audioError.value = 'Erreur réseau audio.'; break;
             case MediaError.MEDIA_ERR_DECODE: audioError.value = 'Erreur décodage audio.'; break;
-            // case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED: audioError.value = 'Format/URL non supporté.'; break;
+            case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED: audioError.value = 'Format/URL non supporté.'; break;
             default: audioError.value = `Erreur audio (code ${error.code})`;
         }
     } else {

@@ -2,16 +2,12 @@
 // Importer uniquement ce qui est nécessaire de vue-router pour ce composant racine
 import { RouterView } from 'vue-router'; 
 
-// Pas besoin d'importer d'autres composants ici pour l'instant
 </script>
 
 <template>
   <!-- La balise principale <main> est une bonne pratique sémantique -->
   <main>
-    <!-- RouterView est l'endroit où les composants correspondants -->
-    <!-- aux routes définies dans src/router/index.js seront rendus. -->
-    <!-- Quand vous naviguez vers /register, RegisterView s'affichera ici. -->
-    <!-- Quand vous naviguez vers /login, LoginView s'affichera ici. -->
+    
     <RouterView />
   </main>
 </template>
@@ -26,8 +22,7 @@ import { RouterView } from 'vue-router';
   box-sizing: border-box;
   margin: 0;
   padding: 0; 
-  /* position: relative; */ /* Parfois utile, à ajouter si besoin */
-  /* font-weight: normal; */ /* Dépend de vos préférences */
+  
 }
 
 body {
@@ -52,8 +47,5 @@ body {
   /* font-weight: normal; */
 }
 
-/* Vous pouvez supprimer les styles spécifiques au header/logo de l'ancien App.vue */
-/* dans les fichiers src/assets/base.css et src/assets/main.css s'ils existent */
-/* ou adapter main.css pour vos styles globaux */
 
 </style>

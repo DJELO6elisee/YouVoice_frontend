@@ -23,7 +23,7 @@
   // import AdminHeader from '@/components/admin/AdminHeader.vue'; // Si vous l'utilisez
 </script>
 
-  <style scoped>
+<style scoped>
   .admin-layout {
     display: flex;                      /* Met la sidebar et le contenu principal côte à côte */
     min-height: 100vh;                  /* Hauteur minimale = 100% de la hauteur de la fenêtre */

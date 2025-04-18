@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 let socket = null; // Garde la référence unique du socket
 
 // URL de votre backend Node.js où Socket.IO écoute
-const SOCKET_URL = import.meta.env.VUE_APP_SOCKET_URL || 'http://localhost:5000'; // URL du backend
+const SOCKET_URL = import.meta.env.VUE_APP_SOCKET_URL || 'https://youvoiceapi-production.up.railway.app'; // URL du backend
 
 /**
  * Initialise la connexion Socket.IO.
