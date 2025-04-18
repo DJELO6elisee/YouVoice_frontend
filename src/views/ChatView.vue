@@ -898,7 +898,7 @@
   .message {
     display: flex;
     margin-bottom: 10px;
-    max-width: 85%; 
+    max-width: 75%; 
   }
 
   .message-bubble {
@@ -1109,11 +1109,13 @@
   
   /* Ajustement taille message bubble sur mobile */
    .message {
-      max-width: 90%;
+      max-width: 85%;
    }
    .my-message .message-bubble {
       right: 0;
       padding: 5px 12px; 
+
+       
    }
     .other-message .message-bubble {
       padding: 5px 12px; 
