@@ -34,239 +34,269 @@
     </div>
 </template>
   
-  <script setup>
-  // Pas besoin de logique JavaScript complexe ici pour une page statique,
-  // mais vous pourriez vouloir importer useRouter si vous préférez
-  // naviguer par programmation au lieu d'utiliser <router-link>
+<script setup>
+  
   import { useRouter } from 'vue-router';
   const router = useRouter();
-  // const goToLogin = () => router.push({ name: 'Login' });
-  // const goToRegister = () => router.push({ name: 'Register' });
-  // const goToAbout = () => router.push({ name: 'About' });
-  </script>
+  
+</script>
   
 <style scoped>
-  /* --- Variables CSS pour personnalisation --- */
-  :root {
-    --primary-color: #4a90e2; /* Un bleu attrayant */
-    --secondary-color: #50e3c2; /* Une touche de turquoise/vert */
-    --background-gradient-start: #f8faff; /* Dégradé de fond léger */
-    --background-gradient-end: #eef4ff;
-    --text-color-hero: #333;
-    --text-color-light: #f8f9fa;
-    --text-color-secondary: #555;
-    --button-text-color: #ffffff;
-    --footer-bg: #343a40;
-    --footer-text: #adb5bd;
-  }
-  
-  .landing-page {
-    min-height: 100vh; /* Prend au moins toute la hauteur de l'écran */
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%);
-    font-family: 'Poppins', 'Arial', sans-serif; /* Police moderne, ajoutez l'import si besoin */
-    overflow-x: hidden; /* Empêche le défilement horizontal */
-  }
-  
-  /* --- En-tête --- */
-  .landing-header {
-    padding: 15px 0;
-    /* background-color: rgba(255, 255, 255, 0.8); */ /* Optionnel: léger fond */
-    /* backdrop-filter: blur(5px); */ /* Optionnel: effet de flou */
-    position: absolute; /* Pour le positionner au-dessus du hero */
-    width: 100%;
-    z-index: 10;
-  }
-  
-  .header-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .app-logo {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--primary-color);
-  }
-  
-  .about-button {
-    background: none;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-    padding: 8px 18px;
-    border-radius: 20px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background-color 0.3s, color 0.3s;
-  }
-  
-  .about-button:hover {
-    background-color: var(--primary-color);
-    color: var(--button-text-color);
-  }
-  
-  /* --- Section Hero --- */
-  .hero-section {
-    flex-grow: 1; /* Prend l'espace restant */
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Centre verticalement */
-    align-items: center; /* Centre horizontalement */
-    text-align: center;
-    padding: 120px 20px 60px 20px; /* Padding haut pour laisser place au header */
-    position: relative; /* Pour la décoration */
-  }
-  
-  .hero-content {
-    max-width: 700px; /* Limite la largeur du contenu */
-    z-index: 1; /* Au-dessus de la décoration */
-  }
-  
+/* --- Variables CSS pour personnalisation --- */
+:root {
+  --primary-color: #0077FF; 
+  --accent-color: #FFA500; 
+  --background-gradient-start: #005BBB; 
+  --background-gradient-end: #FF8C00;
+  --text-color-hero: #FFFFFF; 
+  --text-color-light: #f8f9fa;
+  --text-color-secondary: #E0E0E0;
+  --button-primary-bg: var(--accent-color);
+  --button-primary-text: #FFFFFF;
+  --button-secondary-border: var(--text-color-hero);
+  --button-secondary-text: var(--text-color-hero);
+  --button-secondary-hover-bg: rgba(255, 255, 255, 0.15); 
+  --about-button-border: var(--text-color-hero);
+  --about-button-text: var(--text-color-hero);
+  --about-button-hover-bg: var(--text-color-hero);
+  --about-button-hover-text: var(--primary-color);
+  --footer-bg: rgba(0, 0, 0, 0.2);
+  --footer-text: #E0E0E0;
+  --app-logo-color: var(--text-color-hero);
+  --hero-overlay-color: rgba(0, 30, 80, 0.1);
+}
+
+.landing-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  /* NOUVEAU Dégradé Bleu -> Orange */
+  background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%);
+  color: var(--text-color-hero); /* Couleur de texte par défaut claire */
+  font-family: 'Poppins', 'Arial', sans-serif;
+  overflow-x: hidden;
+  position: relative; /* Pour le pseudo-élément overlay */
+}
+
+/* Optionnel: Ajout d'un overlay léger pour améliorer contraste texte */
+.landing-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--hero-overlay-color);
+  z-index: 1; /* Juste au-dessus du fond, en dessous du contenu */
+  pointer-events: none; /* Permet de cliquer à travers */
+}
+
+/* --- En-tête --- */
+.landing-header {
+  padding: 20px 0; /* Un peu plus d'espace */
+  position: absolute;
+  width: 100%;
+  z-index: 10; /* Au-dessus de l'overlay et du contenu */
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 25px; /* Léger ajustement padding */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-logo {
+  font-size: 1.6rem; /* Légèrement plus grand */
+  font-weight: 700;
+  color: var(--app-logo-color); /* Couleur définie dans les variables */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); /* Ombre légère pour ressortir */
+}
+
+.about-button {
+  background: none;
+  border: 1.5px solid var(--about-button-border); /* Utilise variable */
+  color: var(--about-button-text); /* Utilise variable */
+  padding: 8px 20px; /* Ajustement padding */
+  border-radius: 25px; /* Plus arrondi */
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.about-button:hover {
+  background-color: var(--about-button-hover-bg); /* Utilise variable */
+  color: var(--about-button-hover-text); /* Utilise variable */
+}
+
+/* --- Section Hero --- */
+.hero-section {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 140px 20px 80px 20px; /* Augmenter padding haut/bas */
+  position: relative; /* Pour la décoration et s'assurer que le contenu est au-dessus de ::before */
+  z-index: 2; /* Au-dessus de l'overlay ::before */
+}
+
+.hero-content {
+  max-width: 750px; /* Augmenter légèrement */
+  /* z-index déjà géré par .hero-section */
+}
+
+.welcome-title {
+  font-size: 3.5rem; /* Encore plus grand */
+  font-weight: 700;
+  color: var(--text-color-hero); /* Texte blanc */
+  margin-bottom: 20px;
+  line-height: 1.2;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* Ombre plus marquée */
+}
+
+.welcome-subtitle {
+  font-size: 1.2rem; /* Légèrement plus grand */
+  color: var(--text-color-secondary); /* Gris clair */
+  margin-bottom: 40px; /* Plus d'espace avant boutons */
+  line-height: 1.7; /* Augmenter interligne */
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); /* Ombre légère */
+}
+
+/* --- Boutons CTA (Call To Action) --- */
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Augmenter espace */
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 14px 35px; /* Boutons plus grands */
+  border: none;
+  border-radius: 30px; /* Encore plus arrondis */
+  font-size: 1.05rem; /* Texte légèrement plus grand */
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.3s ease, background-color 0.3s, border-color 0.3s;
+  min-width: 160px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Ombre initiale */
+}
+
+.btn:hover {
+  transform: translateY(-3px) scale(1.03); /* Effet de surélévation léger */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2); /* Ombre plus prononcée */
+}
+
+/* Bouton Principal (Orange) */
+.btn-primary {
+  background-color: var(--button-primary-bg);
+  color: var(--button-primary-text);
+}
+.btn-primary:hover {
+   /* Optionnel: rendre l'orange légèrement plus clair/foncé au survol */
+   filter: brightness(1.1);
+}
+
+/* Bouton Secondaire (Bordure Blanche) */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--button-secondary-text);
+  border: 2px solid var(--button-secondary-border);
+}
+
+.btn-secondary:hover {
+  background-color: var(--button-secondary-hover-bg); /* Fond léger au survol */
+  border-color: var(--button-secondary-border); /* Garde la bordure */
+  color: var(--button-secondary-text); /* Garde texte blanc */
+}
+
+/* --- Décoration Hero (Optionnel - masquée par défaut) --- */
+.hero-decoration {
+  /* Garder masqué ou styliser différemment si besoin */
+  display: none;
+  /* position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.1), transparent); */
+  /* z-index: 0; */
+}
+
+/* --- Pied de page --- */
+.landing-footer {
+  background-color: var(--footer-bg); 
+  color: var(--footer-text);
+  text-align: center;
+  padding: 20px 20px; 
+  font-size: 0.9rem;
+  margin-top: auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* --- Responsivité --- */
+@media (max-width: 768px) {
   .welcome-title {
-    font-size: 3rem; /* Grande taille pour l'impact */
-    font-weight: 700;
-    color: var(--text-color-hero);
-    margin-bottom: 15px;
-    line-height: 1.2;
+    font-size: 2.5rem; 
   }
-  
   .welcome-subtitle {
-    font-size: 1.1rem;
-    color: var(--text-color-secondary);
-    margin-bottom: 35px;
-    line-height: 1.6;
-    max-width: 550px; /* Limiter la largeur du sous-titre */
-    margin-left: auto;
-    margin-right: auto;
+    font-size: 1.1rem; 
   }
-  
-  /* --- Boutons CTA (Call To Action) --- */
+  .hero-section {
+    padding: 120px 20px 60px 20px; 
+  }
   .cta-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 15px; /* Espace entre les boutons */
-    flex-wrap: wrap; /* Permet aux boutons de passer à la ligne sur petit écran */
+    flex-direction: column;
+    align-items: center;
+    gap: 15px; 
   }
-  
   .btn {
-    padding: 12px 30px;
-    border: none;
-    border-radius: 25px; /* Boutons arrondis */
+    width: 85%; 
+    max-width: 320px; 
+    padding: 12px 30px; 
     font-size: 1rem;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    min-width: 140px; /* Largeur minimale */
   }
-  
-  .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .btn-primary {
-    background-color: var(--primary-color);
-    color: var(--button-text-color);
-  }
-  
-  .btn-secondary {
-    background-color: transparent;
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-  }
-  
-  .btn-secondary:hover {
-    background-color: var(--primary-color);
-    color: var(--button-text-color);
-  }
-  
-  /* --- Décoration Hero (Optionnel) --- */
-  .hero-decoration {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100px; /* Hauteur de la vague/forme */
-    /* Exemple avec une vague SVG ou une image de fond */
-    /* background-image: url('path/to/your/wave.svg'); */
-    /* background-repeat: no-repeat; */
-    /* background-position: bottom center; */
-    /* background-size: cover; */
-    /* Ou un simple dégradé pour simuler */
-    background: linear-gradient(to top, rgba(255, 255, 255, 0.5), transparent);
-    z-index: 0;
-  }
-  
-  
-  /* --- Pied de page --- */
-  .landing-footer {
-    background-color: var(--footer-bg);
-    color: var(--footer-text);
-    text-align: center;
-    padding: 15px 20px;
-    font-size: 0.85rem;
-    margin-top: auto; /* Pousse le footer en bas si le contenu est court */
-  }
-  
-  /* --- Responsivité --- */
-  @media (max-width: 768px) {
-    .welcome-title {
-      font-size: 2.2rem; /* Réduire la taille du titre */
-    }
-  
-    .welcome-subtitle {
-      font-size: 1rem;
-    }
-  
-    .hero-section {
-      padding-top: 100px; /* Ajuster le padding */
-    }
-  
-    .cta-buttons {
-      flex-direction: column; /* Empiler les boutons */
-      align-items: center; /* Centrer les boutons empilés */
-      gap: 12px;
-    }
-  
-    .btn {
-      width: 80%; /* Rendre les boutons plus larges sur mobile */
-      max-width: 300px;
-    }
-  }
-  
-  @media (max-width: 480px) {
-     .landing-header {
-         padding: 10px 0;
-     }
-     .header-content {
-         padding: 0 15px;
-     }
-     .app-logo {
-         font-size: 1.3rem;
-     }
-     .about-button {
-         padding: 6px 14px;
-         font-size: 0.9rem;
-     }
-     .welcome-title {
-         font-size: 1.8rem;
-     }
-     .welcome-subtitle {
-         font-size: 0.9rem;
-     }
-     .hero-section {
-         padding: 80px 15px 40px 15px;
-     }
-     .btn {
-        padding: 10px 25px;
-        font-size: 0.95rem;
-     }
-  }
-  
+   .header-content {
+       padding: 0 20px;
+   }
+}
+
+@media (max-width: 480px) {
+   .landing-header {
+       padding: 15px 0;
+   }
+   .header-content {
+       padding: 0 15px;
+   }
+   .app-logo {
+       font-size: 1.4rem;
+   }
+   .about-button {
+       padding: 7px 16px;
+       font-size: 0.85rem;
+   }
+   .welcome-title {
+       font-size: 2rem; /* Plus petit */
+   }
+   .welcome-subtitle {
+       font-size: 1rem;
+   }
+   .hero-section {
+       padding: 100px 15px 50px 15px;
+   }
+   .btn {
+      padding: 11px 28px;
+      font-size: 0.95rem;
+      width: 90%;
+   }
+}
 </style>
