@@ -7,6 +7,10 @@ const DashboardView = () => import('../views/Dashboard.vue');
 const UserProfile = () => import('../views/UserProfile.vue');
 import EditProfile from '../views/EditProfile.vue';
 import UserDashboard from '../components/UserDashboard.vue';
+import LandingPage from '../components/LandingPage.vue';
+import AboutPage from '../views/AboutPage.vue';       // Votre composant À Propos
+
+
 const ChatView = () => import('../views/ChatView.vue'); // Assurez-vous que le chemin est correct
 
 // --- Vues et Layout Admin ---
@@ -41,10 +45,8 @@ const routes = [
   // --- Redirection initiale ---
   {
     path: '/',
-    redirect: () => {
-      // Redirige vers Dashboard si user normal connecté, sinon Login
-      return isUserAuthenticated() ? { name: 'Dashboard' } : { name: 'Login' };
-    }
+    name: 'Landing', // Ou 'Home'
+    component: LandingPage
   },
 
   // --- Routes Utilisateur Normal ---
@@ -59,6 +61,11 @@ const routes = [
     name: 'Login',
     component: LoginView
     // meta: { guestOnly: true }
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: AboutPage
   },
   {
     path: '/dashboard',
