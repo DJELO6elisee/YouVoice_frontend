@@ -898,7 +898,7 @@
   .message {
     display: flex;
     margin-bottom: 10px;
-    max-width: 75%; 
+    max-width: 85%; 
   }
 
   .message-bubble {
@@ -929,7 +929,7 @@
   .my-message .message-bubble {
     background-color: #dcf8c6; 
     color: #333; 
-    right: -60%;
+    right: 5%;
     border-radius: 18px 18px 5px 18px;
   }
 
@@ -1109,11 +1109,11 @@
   
   /* Ajustement taille message bubble sur mobile */
    .message {
-      max-width: 85%;
+      max-width: 90%;
    }
    .my-message .message-bubble {
       right: 0;
-       
+      padding: 5px 12px; 
    }
     .other-message .message-bubble {
       padding: 5px 12px; 
