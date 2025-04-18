@@ -889,7 +889,7 @@
   .messages-container {
     display: flex;
     flex-direction: column;
-    padding: 15px;
+    padding: 10px;
     overflow-y: auto;
     height: calc(100% - 120px);
   }
@@ -901,7 +901,7 @@
   }
 
   .message .message-bubble {
-    padding: 10px 70px;
+    padding: 8px 20px;
     border-radius: 18px;
     word-wrap: break-word;
     position: relative;
@@ -930,6 +930,8 @@
     color: #333;
     border: 1px solid #eee;
     border-radius: 18px 18px 5px 18px;
+    text-align: right;
+
   }
 
   .my-message .message-content .timestamp {
@@ -948,6 +950,8 @@
     border: 1px solid #eee;
     color: #333;
     border-radius: 18px 18px 18px 5px; /* Arrondi différent pour indiquer l'origine */
+    text-align: left;
+
   }
 
 
