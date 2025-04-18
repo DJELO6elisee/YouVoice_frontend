@@ -900,7 +900,7 @@
     max-width: 75%; 
   }
 
-  .message-bubble {
+  .message .message-bubble {
     padding: 10px 70px;
     border-radius: 18px;
     word-wrap: break-word;
@@ -927,8 +927,8 @@
 
   .my-message .message-bubble {
     background-color: #dcf8c6; 
-    color: #333; 
-    right: -70%;
+    color: #333;
+    border: 1px solid #eee;
     border-radius: 18px 18px 5px 18px;
   }
 
@@ -945,7 +945,6 @@
 
   .other-message .message-bubble {
     background-color: #ffffff;
-    /* Ou un gris très clair : #f0f0f0 */
     border: 1px solid #eee;
     color: #333;
     border-radius: 18px 18px 18px 5px; /* Arrondi différent pour indiquer l'origine */
@@ -1070,6 +1069,26 @@
     display: flex; 
     padding: 10px 15px; 
   }
+
+  /* Ajustements potentiels pour la modale sur mobile */
+  .modal-content {
+    width: 95%; 
+    max-height: 90vh;
+  }
+  
+  /* Ajustement taille message bubble sur mobile */
+   .message {
+      max-width: 85%;
+   }
+   .my-message .message-bubble {
+      right: 0;
+
+   }
+    .other-message .message-bubble {
+      padding: 10px 12px; 
+    }
+
+
   /* Cacher les boutons de toggle sur grand écran */
   @media (min-width: 769px) {
     .back-to-conversations-btn,
@@ -1100,26 +1119,7 @@
   }
 
 
-  /* Ajustements potentiels pour la modale sur mobile */
-  .modal-content {
-    width: 95%; 
-    max-height: 90vh;
-  }
   
-  /* Ajustement taille message bubble sur mobile */
-   .message {
-      max-width: 85%;
-   }
-   .my-message {
-    right: 0;
-   }
-   .my-message .message-bubble {
-      right: 0;
-
-   }
-    .other-message .message-bubble {
-      padding: 10px 12px; 
-    }
     
     /* Rendre le bouton nouvelle conversation moins proéminent si besoin */
     /* .new-conversation-btn {
