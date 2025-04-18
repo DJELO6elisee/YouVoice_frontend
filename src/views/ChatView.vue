@@ -901,7 +901,7 @@
   }
 
   .message-bubble {
-    padding: 10px 80px;
+    padding: 10px 70px;
     border-radius: 18px;
     word-wrap: break-word;
     position: relative;
@@ -928,7 +928,7 @@
   .my-message .message-bubble {
     background-color: #dcf8c6; 
     color: #333; 
-    right: -30%;
+    right: -70%;
     border-radius: 18px 18px 5px 18px;
   }
 
@@ -1112,7 +1112,6 @@
    }
    .my-message .message-bubble {
       right: 0;
-      padding: 10px 12px; 
 
    }
     .other-message .message-bubble {
