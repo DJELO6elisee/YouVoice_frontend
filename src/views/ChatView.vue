@@ -130,7 +130,6 @@
             Envoyer <!-- Optionnel: Remplacer par une icône -->
           </button>
         </div>
-
       </div>
 
       <!-- Affichage si aucune conversation n'est sélectionnée -->
@@ -429,7 +428,7 @@
        initError.value = "La connexion temps réel n'a pu être établie.";
     }
   };
-
+  
   const handleSendMessage = () => {
   console.log('[handleSendMessage] Fonction appelée!');
 
@@ -902,8 +901,8 @@
   }
 
   .message-bubble {
-    padding: 5cm 80px;
-    border-radius: 15px;
+    padding: 10px 80px;
+    border-radius: 18px;
     word-wrap: break-word;
     position: relative;
   }
@@ -929,7 +928,7 @@
   .my-message .message-bubble {
     background-color: #dcf8c6; 
     color: #333; 
-    right: 5%;
+    right: -30%;
     border-radius: 18px 18px 5px 18px;
   }
 
@@ -957,7 +956,7 @@
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      margin-right: 5px;
+      margin-right: 8px;
       margin-top: 0;
   }
 
@@ -1113,12 +1112,11 @@
    }
    .my-message .message-bubble {
       right: 0;
-      padding: 5px 12px; 
+      padding: 10px 12px; 
 
-       
    }
     .other-message .message-bubble {
-      padding: 5px 12px; 
+      padding: 10px 12px; 
     }
     
     /* Rendre le bouton nouvelle conversation moins proéminent si besoin */
