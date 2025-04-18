@@ -922,7 +922,7 @@
   /* --- Styles spécifiques pour VOS messages --- */
   .my-message {
     align-self: flex-end; 
-    margin-left: auto; 
+    margin-right: auto; 
   }
 
   .my-message .message-bubble {
@@ -930,7 +930,6 @@
     color: #333;
     border: 1px solid #eee;
     border-radius: 18px 18px 5px 18px;
-    text-align: right;
 
   }
 
@@ -950,8 +949,6 @@
     border: 1px solid #eee;
     color: #333;
     border-radius: 18px 18px 18px 5px; /* Arrondi différent pour indiquer l'origine */
-    text-align: left;
-
   }
 
 
@@ -959,7 +956,6 @@
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      margin-right: 8px;
       margin-top: 0;
   }
 
@@ -1086,6 +1082,7 @@
    }
    .my-message .message-bubble {
       right: 0;
+      width: 50%;
 
    }
     .other-message .message-bubble {
