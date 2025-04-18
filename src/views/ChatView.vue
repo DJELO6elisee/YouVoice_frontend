@@ -1110,6 +1110,9 @@
    .message {
       max-width: 85%;
    }
+   .my-message {
+    right: 0;
+   }
    .my-message .message-bubble {
       right: 0;
 
