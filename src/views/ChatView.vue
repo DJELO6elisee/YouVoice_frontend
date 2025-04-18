@@ -130,6 +130,7 @@
             Envoyer <!-- Optionnel: Remplacer par une icône -->
           </button>
         </div>
+        
       </div>
 
       <!-- Affichage si aucune conversation n'est sélectionnée -->
@@ -428,7 +429,7 @@
        initError.value = "La connexion temps réel n'a pu être établie.";
     }
   };
-  
+
   const handleSendMessage = () => {
   console.log('[handleSendMessage] Fonction appelée!');
 
