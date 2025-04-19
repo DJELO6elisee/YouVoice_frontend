@@ -1,5 +1,5 @@
 <template>
-    <div class="about-page">
+    <div class="about-page dark">
       <div class="about-container">
         <!-- Section En-tête -->
         <header class="about-header">

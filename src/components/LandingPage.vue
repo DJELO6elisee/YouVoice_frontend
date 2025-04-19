@@ -70,12 +70,11 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  /* NOUVEAU Dégradé Bleu -> Orange */
   background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%);
-  color: var(--text-color-hero); /* Couleur de texte par défaut claire */
+  color: var(--text-color-hero);
   font-family: 'Poppins', 'Arial', sans-serif;
   overflow-x: hidden;
-  position: relative; /* Pour le pseudo-élément overlay */
+  position: relative; 
 }
 
 /* Optionnel: Ajout d'un overlay léger pour améliorer contraste texte */
