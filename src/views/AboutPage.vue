@@ -10,7 +10,7 @@
         <!-- Section Projet -->
         <section class="about-section project-section">
           <h2>Le Projet YouVoice</h2>
-          <p>
+          <p class="subtitle">
             YouVoice est né de l'idée de simplifier le partage d'idées, d'émotions et d'histoires à travers le moyen le plus naturel : la voix. Dans un monde où le texte domine, nous voulions redonner sa place à l'authenticité et à la spontanéité des messages vocaux. Notre mission est de fournir une plateforme intuitive et agréable où chacun peut capturer, partager et écouter des moments de vie sonores.
           </p>
           <div class="project-timeline">
@@ -27,7 +27,7 @@
           <div class="developer-info">
             <h3>{{ developerName }}</h3>
             <!-- NOUVEAU: Niveau et Filière -->
-            <p class="developer-education">
+            <p class="subtitle">
                 <i class="fa-solid fa-graduation-cap icon"></i>
                 {{ educationLevel }} en {{ fieldOfStudy }}
             </p>
@@ -86,7 +86,7 @@
         <!-- Optionnel: Section Contact ou Feedback -->
         <section class="about-section contact-section">
            <h2>Contact</h2>
-           <p>
+           <p class="subtitle">
                Votre avis est important ! Pour toute question, suggestion ou rapport de bug,
                n'hésitez pas à nous contacter à l'adresse email ci-dessus.
            </p>
