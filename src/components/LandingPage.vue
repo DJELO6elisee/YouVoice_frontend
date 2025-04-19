@@ -10,9 +10,9 @@
       <!-- Section Principale (Hero) -->
       <main class="hero-section">
         <div class="hero-content">
-          <h1 class="welcome-title">Bienvenue sur YouVoice !</h1>
+          <h1 class="welcome-title">Bienvenue sur YOUVOICE !</h1>
           <p class="welcome-subtitle">
-            Capturez, partagez et écoutez des notes vocales en toute simplicité.
+            Enregistrez, partagez et écoutez des notes vocales en toute simplicité.
             Votre voix, votre histoire.
           </p>
   
@@ -28,7 +28,7 @@
   
       <!-- Optionnel: Pied de page simple -->
       <footer class="landing-footer">
-        <p>© {{ new Date().getFullYear() }} YouVoice. Tous droits réservés.</p>
+        <p>© {{ new Date().getFullYear() }} YOUVOICE. Tous droits réservés.</p>
       </footer>
     </div>
 </template>

@@ -3,15 +3,15 @@
       <div class="about-container">
         <!-- Section En-tête -->
         <header class="about-header">
-          <h1>À Propos de YouVoice</h1>
+          <h1>À Propos de YOUVOICE</h1>
           <p class="subtitle">Découvrez l'histoire et la technologie derrière l'application.</p>
         </header>
   
         <!-- Section Projet -->
         <section class="about-section project-section">
-          <h2>Le Projet YouVoice</h2>
+          <h2>Le Projet YOUVOICE</h2>
           <p>
-            YouVoice est né de l'idée de simplifier le partage d'idées, d'émotions et d'histoires à travers le moyen le plus naturel : la voix. Dans un monde où le texte domine, nous voulions redonner sa place à l'authenticité et à la spontanéité des messages vocaux. Notre mission est de fournir une plateforme intuitive et agréable où chacun peut capturer, partager et écouter des moments de vie sonores.
+            YOUVOICE est né de l'idée de simplifier le partage d'idées, d'émotions et d'histoires à travers le moyen le plus naturel : la voix. Dans un monde où le texte domine, Je voulais redonner la place à l'authenticité et à la spontanéité des messages vocaux. Ma mission est de fournir une plateforme intuitive et agréable où chacun peut Enregistrer, partager et écouter des moments de vie sonores.
           </p>
           <div class="project-timeline">
             <span class="timeline-label">Développement :</span>
