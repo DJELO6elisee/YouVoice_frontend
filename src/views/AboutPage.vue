@@ -10,7 +10,7 @@
         <!-- Section Projet -->
         <section class="about-section project-section">
           <h2>Le Projet YouVoice</h2>
-          <p class="subtitle">
+          <p>
             YouVoice est né de l'idée de simplifier le partage d'idées, d'émotions et d'histoires à travers le moyen le plus naturel : la voix. Dans un monde où le texte domine, nous voulions redonner sa place à l'authenticité et à la spontanéité des messages vocaux. Notre mission est de fournir une plateforme intuitive et agréable où chacun peut capturer, partager et écouter des moments de vie sonores.
           </p>
           <div class="project-timeline">
@@ -27,7 +27,7 @@
           <div class="developer-info">
             <h3>{{ developerName }}</h3>
             <!-- NOUVEAU: Niveau et Filière -->
-            <p class="subtitle">
+            <p class="developer-education">
                 <i class="fa-solid fa-graduation-cap icon"></i>
                 {{ educationLevel }} en {{ fieldOfStudy }}
             </p>
@@ -86,7 +86,7 @@
         <!-- Optionnel: Section Contact ou Feedback -->
         <section class="about-section contact-section">
            <h2>Contact</h2>
-           <p class="subtitle">
+           <p>
                Votre avis est important ! Pour toute question, suggestion ou rapport de bug,
                n'hésitez pas à nous contacter à l'adresse email ci-dessus.
            </p>
@@ -265,7 +265,7 @@
 
 .about-section p {
   margin-bottom: 15px;
-  color: var(--about-text-color); /* Utilise variable texte */
+  color: var(--text-color); /* Utilise variable texte */
   transition: color 0.3s;
 }
 
@@ -358,10 +358,7 @@
   font-size: 1.1em; /* Ajuster taille icône */
 }
 
-/* Section Compétences */
-.skills-section {
-    /* Styles inchangés pour la structure */
-}
+
 .skills-chart {
     width: 100%;
     margin-top: 15px;
@@ -424,7 +421,6 @@
 }
 
 /* Section Technologies */
-.tech-section { /* ... */ }
 .tech-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
